@@ -8,8 +8,7 @@ public class WhenMoving
     public void UpElevatorGoesUp(int floors)
     {
         // Arrange
-        var elevator = new Elevator();
-        elevator.CurrentFloor = 0;
+        var elevator = new Elevator(0, 10);
 
         // Act
         elevator.GoUp(floors);
@@ -24,8 +23,9 @@ public class WhenMoving
     public void DownElevatorGoesDown(int floors)
     {
         // Arrange
-        var elevator = new Elevator();
-        elevator.CurrentFloor = floors;
+        var elevator = new Elevator(0, 10);
+        // Move elevator up first
+        elevator.GoUp(floors);
 
         // Act
         elevator.GoDown(floors);

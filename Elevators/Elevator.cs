@@ -2,9 +2,19 @@
 
 namespace Elevators;
 
+
 public class Elevator
 {
-    public int CurrentFloor { get; set; }
+    public int TopFloor { get; }
+    public int LowerFloor { get; }
+    public int CurrentFloor { get; private set; }
+
+    public Elevator(int lowerFloor, int topFloor)
+    {
+        LowerFloor = lowerFloor;
+        TopFloor = topFloor;
+        CurrentFloor = LowerFloor;
+    }
 
     public event Action<int>? FloorReached;
 
