@@ -2,6 +2,34 @@
 
 public class WhenMoving
 {
+    [Fact]
+    public void ElevatorDoesNotGoBelowLowerFloor_AfterGoingUpAndDown()
+    {
+        // Arrange
+        int lowerFloor = 0;
+        var elevator = new Elevator(lowerFloor, 10);
+
+        // Act
+        elevator.GoUp(4);
+        elevator.GoDown(5);
+
+        // Assert
+        Assert.Equal(lowerFloor, elevator.CurrentFloor);
+    }
+    [Fact]
+    public void ElevatorDoesNotGoBelowLowerFloor()
+    {
+        // Arrange
+        int lowerFloor = 0;
+        var elevator = new Elevator(lowerFloor, 10);
+
+        // Act
+        elevator.GoDown(4);
+
+        // Assert
+        Assert.Equal(lowerFloor, elevator.CurrentFloor);
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(2)]

@@ -22,6 +22,10 @@ public class Elevator
     {
         int start = CurrentFloor;
         int end = CurrentFloor - floors;
+        if (end < LowerFloor)
+        {
+            end = LowerFloor;
+        }
         for (int floor = start - 1; floor >= end; floor--)
         {
             CurrentFloor = floor;
@@ -33,6 +37,10 @@ public class Elevator
     {
         int start = CurrentFloor;
         int end = CurrentFloor + floors;
+        if (end > TopFloor)
+        {
+            end = TopFloor;
+        }
         for (int floor = start + 1; floor <= end; floor++)
         {
             CurrentFloor = floor;
