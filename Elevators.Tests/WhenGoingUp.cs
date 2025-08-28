@@ -2,31 +2,19 @@
 
 public class WhenGoingUp
 {
-    [Fact]
-    public void OneFloorElevatorGoesUp()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void ElevatorGoesUp(int floors)
     {
         // Arrange
         var elevator = new Elevator();
         elevator.CurrentFloor = 0;
 
         // Act
-        elevator.GoUp(1);
+        elevator.GoUp(floors);
 
         // Assert
-        Assert.Equal(1, elevator.CurrentFloor);
-    }
-
-    [Fact]
-    public void TwoFloorElevatorGoesUp()
-    {
-        // Arrange
-        var elevator = new Elevator();
-        elevator.CurrentFloor = 0;
-
-        // Act
-        elevator.GoUp(2);
-
-        // Assert
-        Assert.Equal(2, elevator.CurrentFloor);
+        Assert.Equal(floors, elevator.CurrentFloor);
     }
 }
