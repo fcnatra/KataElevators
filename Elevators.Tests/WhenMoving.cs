@@ -1,11 +1,11 @@
 ﻿namespace Elevators.Tests;
 
-public class WhenGoingUp
+public class WhenMoving
 {
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public void ElevatorGoesUp(int floors)
+    public void UpElevatorGoesUp(int floors)
     {
         // Arrange
         var elevator = new Elevator();
