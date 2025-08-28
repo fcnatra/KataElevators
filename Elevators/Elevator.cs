@@ -1,7 +1,7 @@
 
 namespace Elevators;
 
-public class Elevator
+public class Elevator : IElevator
 {
     /// <summary>
     /// Energía consumida por hora en kW (kilovatios). Por defecto 5.5 kW.
@@ -59,7 +59,7 @@ public class Elevator
     {
         if (destinationFloor > TopFloor)
             destinationFloor = TopFloor;
-        
+
         if (destinationFloor < LowerFloor)
             destinationFloor = LowerFloor;
 
