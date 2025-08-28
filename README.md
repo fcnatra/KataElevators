@@ -5,7 +5,7 @@ El contrapeso es un elemento clave en la mayoría de los ascensores, diseñado p
 
 En caso de que la cabina supere la velocidad establecida, el sistema de seguridad, que incluye un limitador de velocidad y un paracaídas, actúa para frenarla.
 
-Un ascensor eléctrico para 8 personas probablemente tendría un consumo de entre 5 kWh y 6 kWh.
+Un ascensor eléctrico para 8 personas probablemente tendría un consumo de entre 5 kWh y 6 kWh. La media es 5.5 kW/hora
 
 Objetivo: Crear una lógica de funcionamiento para los usuarios esperen lo menos posible por un ascensor, gastando la menor cantidad posible de energía.
 
