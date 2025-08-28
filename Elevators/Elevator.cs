@@ -1,7 +1,5 @@
 
-
 namespace Elevators;
-
 
 public class Elevator
 {
@@ -16,9 +14,28 @@ public class Elevator
         CurrentFloor = LowerFloor;
     }
 
+
     public event Action<int>? FloorReached;
 
-    public void GoDown(int floors)
+    public void GoToFloor(int destinationFloor)
+    {
+        if (destinationFloor > TopFloor)
+            destinationFloor = TopFloor;
+        if (destinationFloor < LowerFloor)
+            destinationFloor = LowerFloor;
+
+        if (destinationFloor > CurrentFloor)
+        {
+            GoUp(destinationFloor - CurrentFloor);
+        }
+        else if (destinationFloor < CurrentFloor)
+        {
+            GoDown(CurrentFloor - destinationFloor);
+        }
+        // If destinationFloor == CurrentFloor, do nothing
+    }
+
+    internal void GoDown(int floors)
     {
         int start = CurrentFloor;
         int end = CurrentFloor - floors;
@@ -33,7 +50,7 @@ public class Elevator
         }
     }
 
-    public void GoUp(int floors)
+    internal void GoUp(int floors)
     {
         int start = CurrentFloor;
         int end = CurrentFloor + floors;

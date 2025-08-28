@@ -10,7 +10,7 @@ public class WhenMoving
         var elevator = new Elevator(0, topFloor);
 
         // Act
-        elevator.GoUp(11); // Try to go above top floor
+        elevator.GoToFloor(11); // Try to go above top floor
 
         // Assert
         Assert.Equal(topFloor, elevator.CurrentFloor);
@@ -22,11 +22,11 @@ public class WhenMoving
         // Arrange
         int topFloor = 10;
         var elevator = new Elevator(0, topFloor);
-        elevator.GoUp(8); // Go up to floor 8
-        elevator.GoDown(3); // Go down to floor 5
+        elevator.GoToFloor(8); // Go up to floor 8
+        elevator.GoToFloor(5); // Go down to floor 5
 
         // Act
-        elevator.GoUp(10); // Try to go above top floor
+        elevator.GoToFloor(15); // Try to go above top floor
 
         // Assert
         Assert.Equal(topFloor, elevator.CurrentFloor);
@@ -37,10 +37,10 @@ public class WhenMoving
         // Arrange
         int lowerFloor = 0;
         var elevator = new Elevator(lowerFloor, 10);
-        elevator.GoUp(4);
+        elevator.GoToFloor(4);
 
         // Act
-        elevator.GoDown(5);
+        elevator.GoToFloor(-1);
 
         // Assert
         Assert.Equal(lowerFloor, elevator.CurrentFloor);
@@ -53,7 +53,7 @@ public class WhenMoving
         var elevator = new Elevator(lowerFloor, 10);
 
         // Act
-        elevator.GoDown(4);
+        elevator.GoToFloor(-4);
 
         // Assert
         Assert.Equal(lowerFloor, elevator.CurrentFloor);
@@ -62,30 +62,30 @@ public class WhenMoving
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public void UpElevatorGoesUp(int floors)
+    public void UpElevatorGoesUp(int floor)
     {
         // Arrange
         var elevator = new Elevator(0, 10);
 
         // Act
-        elevator.GoUp(floors);
+        elevator.GoToFloor(floor);
 
         // Assert
-        Assert.Equal(floors, elevator.CurrentFloor);
+        Assert.Equal(floor, elevator.CurrentFloor);
     }
 
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public void DownElevatorGoesDown(int floors)
+    public void DownElevatorGoesDown(int floor)
     {
         // Arrange
         var elevator = new Elevator(0, 10);
         // Move elevator up first
-        elevator.GoUp(floors);
+        elevator.GoToFloor(floor);
 
         // Act
-        elevator.GoDown(floors);
+        elevator.GoToFloor(0);
 
         // Assert
         Assert.Equal(0, elevator.CurrentFloor);
