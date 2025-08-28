@@ -3,14 +3,43 @@
 public class WhenMoving
 {
     [Fact]
+    public void ElevatorDoesNotGoAboveTopFloor()
+    {
+        // Arrange
+        int topFloor = 10;
+        var elevator = new Elevator(0, topFloor);
+
+        // Act
+        elevator.GoUp(11); // Try to go above top floor
+
+        // Assert
+        Assert.Equal(topFloor, elevator.CurrentFloor);
+    }
+
+    [Fact]
+    public void ElevatorDoesNotGoAboveTopFloor_AfterGoingDownAndUp()
+    {
+        // Arrange
+        int topFloor = 10;
+        var elevator = new Elevator(0, topFloor);
+        elevator.GoUp(8); // Go up to floor 8
+        elevator.GoDown(3); // Go down to floor 5
+
+        // Act
+        elevator.GoUp(10); // Try to go above top floor
+
+        // Assert
+        Assert.Equal(topFloor, elevator.CurrentFloor);
+    }
+    [Fact]
     public void ElevatorDoesNotGoBelowLowerFloor_AfterGoingUpAndDown()
     {
         // Arrange
         int lowerFloor = 0;
         var elevator = new Elevator(lowerFloor, 10);
+        elevator.GoUp(4);
 
         // Act
-        elevator.GoUp(4);
         elevator.GoDown(5);
 
         // Assert
