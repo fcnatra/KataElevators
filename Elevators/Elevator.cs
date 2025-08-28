@@ -4,16 +4,29 @@ namespace Elevators;
 
 public class Elevator
 {
-    // Add properties and methods for Elevator here
     public int CurrentFloor { get; set; }
+
+    public event Action<int>? FloorReached;
 
     public void GoDown(int floors)
     {
-        CurrentFloor -= floors;
+        int start = CurrentFloor;
+        int end = CurrentFloor - floors;
+        for (int floor = start - 1; floor >= end; floor--)
+        {
+            CurrentFloor = floor;
+            FloorReached?.Invoke(floor);
+        }
     }
 
     public void GoUp(int floors)
     {
-        CurrentFloor += floors;
+        int start = CurrentFloor;
+        int end = CurrentFloor + floors;
+        for (int floor = start + 1; floor <= end; floor++)
+        {
+            CurrentFloor = floor;
+            FloorReached?.Invoke(floor);
+        }
     }
 }
