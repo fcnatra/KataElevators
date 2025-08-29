@@ -107,6 +107,7 @@ public class Elevator : IElevator
             OnFloorReached?.Invoke(floor);
         }
     }
+
     public void OpenDoors()
     {
         // Simulate opening doors (could raise an event or just be a placeholder for now)

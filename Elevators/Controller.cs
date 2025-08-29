@@ -1,9 +1,13 @@
 
+using System.Dynamic;
 
 namespace Elevators
 {
+    public enum Direction { None, Up, Down }
+
     public class Controller
     {
+        public Direction LastDirection { get; private set; } = Direction.None;
         private readonly IElevator _elevator;
 
         private readonly HashSet<int> _pendingUpRequests = new HashSet<int>();
@@ -31,6 +35,7 @@ namespace Elevators
         public void PressCallDownButton(int floor)
         {
             _pendingDownRequests.Add(floor);
+            LastDirection = Direction.Down;
             _elevator.GoToFloor(floor);
         }
 
@@ -41,6 +46,7 @@ namespace Elevators
 
         public void PressCallUpButton(int floor)
         {
+            LastDirection = Direction.Up;
             _pendingUpRequests.Add(floor);
             _elevator.GoToFloor(floor);
         }
