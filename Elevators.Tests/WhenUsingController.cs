@@ -20,7 +20,7 @@ namespace Elevators.Tests
                 .Invokes(() => hasPendingDownRequests = controller.HasPendingDownRequestForFloor(destinationFloor));
 
             // Act
-            controller.PressDownButton(destinationFloor);
+            controller.PressCallDownButton(destinationFloor);
 
             // Assert
             Assert.True(hasPendingDownRequests);
@@ -35,7 +35,7 @@ namespace Elevators.Tests
             elevator.GoToFloor(7);
 
             // Act
-            controller.PressDownButton(5);
+            controller.PressCallDownButton(5);
 
             // Assert
             Assert.Equal(5, elevator.CurrentFloor);
@@ -50,7 +50,7 @@ namespace Elevators.Tests
             var controller = new Controller(elevator);
 
             // Act
-            controller.PressUpButton(3);
+            controller.PressCallUpButton(3);
 
             // Assert
             Assert.Equal(3, elevator.CurrentFloor);
@@ -71,7 +71,7 @@ namespace Elevators.Tests
                 .Invokes(() => hasPendingUpRequests = controller.HasPendingUpRequestForFloor(destinationFloor));
 
             // Act
-            controller.PressUpButton(destinationFloor);
+            controller.PressCallUpButton(destinationFloor);
 
             // Assert
             Assert.True(hasPendingUpRequests);

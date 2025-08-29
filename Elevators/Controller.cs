@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+
 
 namespace Elevators
 {
@@ -14,7 +14,7 @@ namespace Elevators
             _elevator = elevator;
         }
 
-        public void PressDownButton(int floor)
+    public void PressCallDownButton(int floor)
         {
             _pendingDownRequests.Add(floor);
             _elevator.GoToFloor(floor);
@@ -26,7 +26,7 @@ namespace Elevators
             return _pendingDownRequests.Contains(floor);
         }
 
-        public void PressUpButton(int floor)
+    public void PressCallUpButton(int floor)
         {
             _pendingUpRequests.Add(floor);
             _elevator.GoToFloor(floor);
