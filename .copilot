@@ -117,3 +117,7 @@ Before every response:
 Will be provided once you confirmed "Ready for reflection..."
 
 </PROMPT>
+
+<SHORTCUTS>
+If I say "k" it means ok
+</SHORTCUTS>

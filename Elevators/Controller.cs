@@ -6,12 +6,25 @@ namespace Elevators
     {
         private readonly IElevator _elevator;
 
+        private readonly HashSet<int> _pendingUpRequests = new HashSet<int>();
+        private readonly HashSet<int> _pendingDownRequests = new HashSet<int>();
+
         public Controller(IElevator elevator)
         {
             _elevator = elevator;
         }
 
-        private readonly HashSet<int> _pendingUpRequests = new HashSet<int>();
+        public void PressDownButton(int floor)
+        {
+            _pendingDownRequests.Add(floor);
+            _elevator.GoToFloor(floor);
+            _pendingDownRequests.Remove(floor);
+        }
+
+        public bool HasPendingDownRequestForFloor(int floor)
+        {
+            return _pendingDownRequests.Contains(floor);
+        }
 
         public void PressUpButton(int floor)
         {
