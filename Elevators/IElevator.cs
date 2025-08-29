@@ -10,7 +10,8 @@ public interface IElevator
     int CurrentFloor { get; }
     int LowerFloor { get; }
 
-    Action<int>? OnFloorReached { get; set; }
+    Action<int>? OnFloorPassed { get; set; }
+    Action<int>? OnStop { get; set; }
     public Action? OnDoorsOpened { get; }
 
     double GetEnergyConsumption();

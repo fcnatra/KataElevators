@@ -31,8 +31,8 @@ namespace Elevators.Tests
             var doorsOpened = false;
 
             var elevator = new Elevator(0, 10);
+            elevator.OnStop += (floor) => floorReached = floor;
             elevator.OnDoorsOpened += () => doorsOpened = true;
-            elevator.OnFloorReached += (floor) => floorReached = floor;
 
             var controller = new Controller(elevator);
 

@@ -121,3 +121,9 @@ Will be provided once you confirmed "Ready for reflection..."
 <SHORTCUTS>
 If I say "k" it means ok
 </SHORTCUTS>
+
+<CSHARP_CODING_STYLE>
+When modifying the code:
+- Do not place code that belongs to a class outside of the brackets of the class
+- After modifying the class, check its structure and indentation
+</CSHARP_CODING_STYLE>

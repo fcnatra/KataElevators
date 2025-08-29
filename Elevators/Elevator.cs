@@ -3,7 +3,8 @@ namespace Elevators;
 
 public class Elevator : IElevator
 {
-    public Action<int>? OnFloorReached { get; set; }
+    public Action<int>? OnFloorPassed { get; set; }
+    public Action<int>? OnStop { get; set; }
     public Action? OnDoorsOpened { get; set; }
     public int TopFloor { get; }
     public int CurrentFloor { get; internal set; }
@@ -74,6 +75,8 @@ public class Elevator : IElevator
             GoDown(CurrentFloor - destinationFloor);
         }
         // If destinationFloor == CurrentFloor, do nothing
+
+        OnStop?.Invoke(CurrentFloor);
     }
 
     internal void GoDown(int floors)
@@ -88,7 +91,7 @@ public class Elevator : IElevator
         {
             CurrentFloor = floor;
             TotalFloorsTraveled++;
-            OnFloorReached?.Invoke(floor);
+            OnFloorPassed?.Invoke(floor);
         }
     }
 
@@ -104,7 +107,7 @@ public class Elevator : IElevator
         {
             CurrentFloor = floor;
             TotalFloorsTraveled++;
-            OnFloorReached?.Invoke(floor);
+            OnFloorPassed?.Invoke(floor);
         }
     }
 

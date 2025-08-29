@@ -16,7 +16,7 @@ namespace Elevators
         public Controller(IElevator elevator)
         {
             _elevator = elevator;
-            _elevator.OnFloorReached += OnElevatorFloorReached;
+            _elevator.OnStop += OpenDoors;
         }
 
         public void SelectDestinationFloor(int floor)
@@ -55,14 +55,12 @@ namespace Elevators
         {
             return _pendingUpRequests.Contains(floor);
         }
-        private void OnElevatorFloorReached(int floor)
+
+        private void OpenDoors(int floor)
         {
-            if (_pendingUpRequests.Contains(floor) || _pendingDownRequests.Contains(floor))
-            {
-                _pendingUpRequests.RemoveWhere(f => f == floor);
-                _pendingDownRequests.RemoveWhere(f => f == floor);
-                _elevator.OpenDoors();
-            }
+            _pendingUpRequests.RemoveWhere(f => f == floor);
+            _pendingDownRequests.RemoveWhere(f => f == floor);
+            _elevator.OpenDoors();
         }
     }
 }
