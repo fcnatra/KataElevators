@@ -48,7 +48,10 @@ namespace Elevators
         {
             LastDirection = Direction.Up;
             _pendingUpRequests.Add(floor);
-            _elevator.GoToFloor(floor);
+            if (_elevator.Status == ElevatorStatus.Stopped)
+            {
+                _elevator.GoToFloor(floor);
+            }
         }
 
         public bool HasPendingUpRequestForFloor(int floor)

@@ -3,6 +3,7 @@ namespace Elevators;
 
 public interface IElevator
 {
+    ElevatorStatus Status { get; }
     double EnergyConsumptionKWH { get; set; }
     int SecondsPerFloor { get; set; }
     int TotalFloorsTraveled { get; }
@@ -10,7 +11,7 @@ public interface IElevator
     int CurrentFloor { get; }
     int LowerFloor { get; }
 
-    Action<int>? OnFloorPassed { get; set; }
+    Action<int>? OnFloor { get; set; }
     Action<int>? OnStop { get; set; }
     public Action? OnDoorsOpened { get; }
 

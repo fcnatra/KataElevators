@@ -96,7 +96,7 @@ namespace Elevators.Tests
         }
 
         [Fact]
-        public void UserPressesUpButton_RegistersUpRequest()
+        public void UpRequestButton_RegistersUpRequest()
         {
             // Arrange
             int destinationFloor = 3;
