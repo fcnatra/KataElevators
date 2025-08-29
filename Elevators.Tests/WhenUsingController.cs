@@ -7,6 +7,28 @@ namespace Elevators.Tests
     public class WhenUsingController
     {
         [Fact]
+        public void CallsOpenDoors_WhenElevatorReachesUpRequestedFloor()
+        {
+            // Arrange
+            int requestedFloor = 4;
+            int floorReached = 0;
+            var doorsOpened = false;
+
+            var elevator = new Elevator(0, 10);
+            elevator.OnDoorsOpened += () => doorsOpened = true;
+            elevator.OnFloorReached += (floor) => floorReached = floor;
+
+            var controller = new Controller(elevator);
+
+            // Act
+            controller.PressCallUpButton(requestedFloor);
+
+            // Assert
+            Assert.Equal(floorReached, requestedFloor);
+            Assert.True(doorsOpened);
+        }
+
+        [Fact]
         public void DownRequest_RegistersDownRequest()
         {
             // Arrange

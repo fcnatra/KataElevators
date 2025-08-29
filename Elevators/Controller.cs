@@ -12,9 +12,10 @@ namespace Elevators
         public Controller(IElevator elevator)
         {
             _elevator = elevator;
+            _elevator.OnFloorReached += OnElevatorFloorReached;
         }
 
-    public void PressCallDownButton(int floor)
+        public void PressCallDownButton(int floor)
         {
             _pendingDownRequests.Add(floor);
             _elevator.GoToFloor(floor);
@@ -26,7 +27,7 @@ namespace Elevators
             return _pendingDownRequests.Contains(floor);
         }
 
-    public void PressCallUpButton(int floor)
+        public void PressCallUpButton(int floor)
         {
             _pendingUpRequests.Add(floor);
             _elevator.GoToFloor(floor);
@@ -36,6 +37,13 @@ namespace Elevators
         public bool HasPendingUpRequestForFloor(int floor)
         {
             return _pendingUpRequests.Contains(floor);
+        }
+        private void OnElevatorFloorReached(int floor)
+        {
+            if (_pendingUpRequests.Contains(floor) || _pendingDownRequests.Contains(floor))
+            {
+                _elevator.OpenDoors();
+            }
         }
     }
 }
