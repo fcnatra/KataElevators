@@ -7,7 +7,23 @@ namespace Elevators.Tests
     public class WhenUsingController
     {
         [Fact]
-        public void CallsOpenDoors_WhenElevatorReachesUpRequestedFloor()
+        public void SelectingDestinationFloor_AddsToCorrectRequestList()
+        {
+            // Arrange
+            var elevator = new Elevator(0, 10);
+            var controller = new Controller(elevator);
+
+            controller.PressCallUpButton(2);
+
+            // Act
+            controller.SelectDestinationFloor(8);
+
+            // Assert
+            Assert.True(controller.HasPendingUpRequestForFloor(8));
+        }
+
+        [Fact]
+        public void WhenElevatorReachesUpRequestedFloor_DoorsAreOpened()
         {
             // Arrange
             int requestedFloor = 4;
