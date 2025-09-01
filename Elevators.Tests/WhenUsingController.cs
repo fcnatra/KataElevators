@@ -53,19 +53,15 @@ namespace Elevators.Tests
         {
             // Arrange
             int destinationFloor = 5;
-            bool hasPendingDownRequests = false;
 
             var fakeElevator = A.Fake<IElevator>();
             var controller = new Controller(fakeElevator);
-
-            A.CallTo(() => fakeElevator.GoToFloor(destinationFloor))
-                .Invokes(() => hasPendingDownRequests = controller.HasPendingRequestForFloor(destinationFloor));
 
             // Act
             controller.SelectDestinationFloor(destinationFloor);
 
             // Assert
-            Assert.True(hasPendingDownRequests);
+            Assert.True(controller.HasPendingRequestForFloor(destinationFloor));
         }
         
         [Fact]

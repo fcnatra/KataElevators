@@ -89,9 +89,7 @@ namespace Elevators
 
             Status = ElevatorStatus.Moving;
             for (int floor = start - 1; floor >= end; floor--)
-            {
                 SetCurrentFloor(floor);
-            }
         }
 
         internal void GoUp(int targetFloor)
@@ -106,9 +104,7 @@ namespace Elevators
 
         private void SetCurrentFloor(int floor)
         {
-#if DEBUG
-            System.Threading.Thread.Sleep(_secondsPerFloor * 10);
-#endif
+            System.Threading.Thread.Sleep(SecondsPerFloor * 1000);
             CurrentFloor = floor;
             TotalFloorsTraveled++;
             OnFloor?.Invoke(floor);
