@@ -8,13 +8,11 @@ namespace Elevators
         public Action<int>? OnFloor { get; set; }
         public Action<int>? OnStop { get; set; }
         public Action? OnDoorsOpened { get; set; }
+        public Func<int>? NextStop { get; set; }
         public int TopFloor { get; }
         public int CurrentFloor { get; internal set; }
         public int LowerFloor { get; }
 
-        /// <summary>
-        /// Energía consumida por hora en kW (kilovatios). Tiene valor por defecto.
-        /// </summary>
         private double _energyConsumptionKWH = 5.5;
         public double EnergyConsumptionKWH
         {
@@ -26,9 +24,6 @@ namespace Elevators
             }
         }
 
-        /// <summary>
-        /// Segundos que tarda en recorrer un piso. Tiene valor por defecto.
-        /// </summary>
         private int _secondsPerFloor = 5;
         public int SecondsPerFloor
         {
@@ -42,9 +37,6 @@ namespace Elevators
 
         public int TotalFloorsTraveled { get; private set; } = 0;
 
-        /// <summary>
-        /// Devuelve el consumo total de energía (kWh) considerando todos los viajes realizados.
-        /// </summary>
         public double GetEnergyConsumption()
         {
             double totalSeconds = TotalFloorsTraveled * SecondsPerFloor;
@@ -67,33 +59,39 @@ namespace Elevators
             if (destinationFloor < LowerFloor)
                 destinationFloor = LowerFloor;
 
-            if (destinationFloor > CurrentFloor)
+            System.Threading.Tasks.Task.Run(() =>
             {
-                GoUp(destinationFloor - CurrentFloor);
-            }
-            else if (destinationFloor < CurrentFloor)
-            {
-                GoDown(CurrentFloor - destinationFloor);
-            }
-            // If destinationFloor == CurrentFloor, do nothing
-            Status = ElevatorStatus.Stopped;
-            OnStop?.Invoke(CurrentFloor);
+                Status = ElevatorStatus.Moving;
+                if (destinationFloor > CurrentFloor)
+                {
+                    GoUp(destinationFloor);
+                }
+                else if (destinationFloor < CurrentFloor)
+                {
+                    GoDown(destinationFloor);
+                }
+                // If destinationFloor == CurrentFloor, do nothing
+                Status = ElevatorStatus.Stopped;
+                OnStop?.Invoke(CurrentFloor);
+            });
         }
 
-        internal void GoDown(int floors)
+        internal void GoDown(int targetFloor)
         {
             int start = CurrentFloor;
-            int end = Math.Max(CurrentFloor - floors, 0);
+            int end = Math.Max(targetFloor, 0);
 
             Status = ElevatorStatus.Moving;
             for (int floor = start - 1; floor >= end; floor--)
+            {
                 SetCurrentFloor(floor);
+            }
         }
 
-        internal void GoUp(int floors)
+        internal void GoUp(int targetFloor)
         {
             int start = CurrentFloor;
-            int end = Math.Min(CurrentFloor + floors, TopFloor);
+            int end = Math.Min(targetFloor, TopFloor);
 
             Status = ElevatorStatus.Moving;
             for (int floor = start + 1; floor <= end; floor++)
@@ -102,6 +100,9 @@ namespace Elevators
 
         private void SetCurrentFloor(int floor)
         {
+            #if DEBUG
+            System.Threading.Thread.Sleep(_secondsPerFloor * 10);
+            #endif
             CurrentFloor = floor;
             TotalFloorsTraveled++;
             OnFloor?.Invoke(floor);

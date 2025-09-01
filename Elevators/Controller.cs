@@ -9,60 +9,46 @@ namespace Elevators
     {
         public Direction LastDirection { get; private set; } = Direction.None;
         private readonly IElevator _elevator;
-
-        private readonly HashSet<int> _pendingUpRequests = new HashSet<int>();
-        private readonly HashSet<int> _pendingDownRequests = new HashSet<int>();
+        private readonly SortedSet<int> _pendingRequests = new SortedSet<int>();
 
         public Controller(IElevator elevator)
         {
             _elevator = elevator;
             _elevator.OnStop += OpenDoors;
+            Task.Run(async () => await StartRequestProcessingLoop());
+        }
+
+        private async Task StartRequestProcessingLoop()
+        {
+            while (true)
+            {
+                await Task.Delay(100);
+
+                if (_elevator.Status != ElevatorStatus.Stopped || _pendingRequests.Count == 0)
+                    continue;
+                
+                int nextFloor = _pendingRequests.Min;
+                _elevator.GoToFloor(nextFloor);
+            }
         }
 
         public void SelectDestinationFloor(int floor)
         {
-            if (floor > _elevator.CurrentFloor)
-            {
-                _pendingUpRequests.Add(floor);
-            }
-            else if (floor < _elevator.CurrentFloor)
-            {
-                _pendingDownRequests.Add(floor);
-            }
-            // If floor == CurrentFloor, do nothing
+            if (!_pendingRequests.Contains(floor))
+                _pendingRequests.Add(floor);
         }
 
-        public void PressCallDownButton(int floor)
+        public bool HasPendingRequestForFloor(int floor)
         {
-            _pendingDownRequests.Add(floor);
-            LastDirection = Direction.Down;
-            _elevator.GoToFloor(floor);
-        }
-
-        public bool HasPendingDownRequestForFloor(int floor)
-        {
-            return _pendingDownRequests.Contains(floor);
-        }
-
-        public void PressCallUpButton(int floor)
-        {
-            LastDirection = Direction.Up;
-            _pendingUpRequests.Add(floor);
-            if (_elevator.Status == ElevatorStatus.Stopped)
-            {
-                _elevator.GoToFloor(floor);
-            }
-        }
-
-        public bool HasPendingUpRequestForFloor(int floor)
-        {
-            return _pendingUpRequests.Contains(floor);
+            return _pendingRequests.Contains(floor);
         }
 
         private void OpenDoors(int floor)
         {
-            _pendingUpRequests.RemoveWhere(f => f == floor);
-            _pendingDownRequests.RemoveWhere(f => f == floor);
+            System.Diagnostics.Debug.WriteLine($"Opening doors at floor {floor}");
+            if (_pendingRequests.Contains(floor))
+                _pendingRequests.Remove(floor);
+
             _elevator.OpenDoors();
         }
     }

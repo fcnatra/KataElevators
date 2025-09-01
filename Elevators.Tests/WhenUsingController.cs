@@ -1,6 +1,7 @@
 using Xunit;
 using Elevators;
 using FakeItEasy;
+using Microsoft.VisualBasic;
 
 namespace Elevators.Tests
 {
@@ -11,35 +12,38 @@ namespace Elevators.Tests
         {
             // Arrange
             var elevator = new Elevator(0, 10);
+
             var controller = new Controller(elevator);
 
-            controller.PressCallUpButton(2);
+            controller.SelectDestinationFloor(2);
 
             // Act
             controller.SelectDestinationFloor(8);
 
             // Assert
-            Assert.True(controller.HasPendingUpRequestForFloor(8));
+            Assert.True(controller.HasPendingRequestForFloor(8));
         }
 
         [Fact]
-        public void WhenElevatorReachesUpRequestedFloor_DoorsAreOpened()
+        public async Task WhenElevatorReachesUpRequestedFloor_DoorsAreOpened()
         {
             // Arrange
             int requestedFloor = 4;
             int floorReached = 0;
             var doorsOpened = false;
+            var tcs = new TaskCompletionSource();
 
             var elevator = new Elevator(0, 10);
-            elevator.OnStop += (floor) => floorReached = floor;
+            elevator.OnStop += (floor) => { floorReached = floor; tcs.SetResult(); };
             elevator.OnDoorsOpened += () => doorsOpened = true;
 
             var controller = new Controller(elevator);
 
             // Act
-            controller.PressCallUpButton(requestedFloor);
+            controller.SelectDestinationFloor(requestedFloor);
 
             // Assert
+            await tcs.Task;
             Assert.Equal(floorReached, requestedFloor);
             Assert.True(doorsOpened);
         }
@@ -55,44 +59,57 @@ namespace Elevators.Tests
             var controller = new Controller(fakeElevator);
 
             A.CallTo(() => fakeElevator.GoToFloor(destinationFloor))
-                .Invokes(() => hasPendingDownRequests = controller.HasPendingDownRequestForFloor(destinationFloor));
+                .Invokes(() => hasPendingDownRequests = controller.HasPendingRequestForFloor(destinationFloor));
 
             // Act
-            controller.PressCallDownButton(destinationFloor);
+            controller.SelectDestinationFloor(destinationFloor);
 
             // Assert
             Assert.True(hasPendingDownRequests);
         }
         
         [Fact]
-        public void DownRequestMovesElevatorToTheDesiredFloor()
+        public async Task DownRequestMovesElevatorToTheDesiredFloor()
         {
             // Arrange
+            var tcs = new TaskCompletionSource();
+
             var elevator = new Elevator(0, 10);
+            elevator.OnDoorsOpened += () => tcs.SetResult();
+
             var controller = new Controller(elevator);
-            elevator.GoToFloor(7);
+
+            // first, go up
+            controller.SelectDestinationFloor(7);
+            await tcs.Task;
+            tcs = new TaskCompletionSource();
 
             // Act
-            controller.PressCallDownButton(5);
+            controller.SelectDestinationFloor(5);
 
             // Assert
+            await tcs.Task;
             Assert.Equal(5, elevator.CurrentFloor);
-            Assert.False(controller.HasPendingDownRequestForFloor(5));
+            Assert.False(controller.HasPendingRequestForFloor(5));
         }
 
         [Fact]
-        public void UpRequestMovesElevatorToTheDesiredFloor()
+        public async Task UpRequestMovesElevatorToTheDesiredFloor()
         {
             // Arrange
+            var tcs = new TaskCompletionSource();
             var elevator = new Elevator(0, 10);
+            elevator.OnDoorsOpened += () => tcs.SetResult();
+
             var controller = new Controller(elevator);
 
             // Act
-            controller.PressCallUpButton(3);
+            controller.SelectDestinationFloor(3);
 
             // Assert
+            await tcs.Task;
             Assert.Equal(3, elevator.CurrentFloor);
-            Assert.False(controller.HasPendingUpRequestForFloor(3));
+            Assert.False(controller.HasPendingRequestForFloor(3));
         }
 
         [Fact]
@@ -106,10 +123,10 @@ namespace Elevators.Tests
             var controller = new Controller(fakeElevator);
 
             A.CallTo(() => fakeElevator.GoToFloor(destinationFloor))
-                .Invokes(() => hasPendingUpRequests = controller.HasPendingUpRequestForFloor(destinationFloor));
+                .Invokes(() => hasPendingUpRequests = controller.HasPendingRequestForFloor(destinationFloor));
 
             // Act
-            controller.PressCallUpButton(destinationFloor);
+            controller.SelectDestinationFloor(destinationFloor);
 
             // Assert
             Assert.True(hasPendingUpRequests);
