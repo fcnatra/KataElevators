@@ -1,13 +1,15 @@
 namespace Elevators
 {
-    public enum ElevatorStatus { Stopped, Moving }
 
     public class Elevator : IElevator
     {
         public ElevatorStatus Status { get; private set; } = ElevatorStatus.Stopped;
+        public DoorStatus DoorStatus { get; private set; } = DoorStatus.Open;
         public Action<int>? OnFloor { get; set; }
-        public Action<int>? OnStop { get; set; }
+        public Action? OnBeforeMoving { get; set; }
+        public Action<int>? OnAfterStop { get; set; }
         public Action? OnDoorsOpened { get; set; }
+        public Action? OnDoorsClosed { get; set; }
         public Func<int>? NextStop { get; set; }
         public int TopFloor { get; }
         public int CurrentFloor { get; internal set; }
@@ -62,6 +64,7 @@ namespace Elevators
             System.Threading.Tasks.Task.Run(() =>
             {
                 Status = ElevatorStatus.Moving;
+                OnBeforeMoving?.Invoke();
                 if (destinationFloor > CurrentFloor)
                 {
                     GoUp(destinationFloor);
@@ -72,7 +75,7 @@ namespace Elevators
                 }
                 // If destinationFloor == CurrentFloor, do nothing
                 Status = ElevatorStatus.Stopped;
-                OnStop?.Invoke(CurrentFloor);
+                OnAfterStop?.Invoke(CurrentFloor);
             });
         }
 
@@ -100,9 +103,9 @@ namespace Elevators
 
         private void SetCurrentFloor(int floor)
         {
-            #if DEBUG
+#if DEBUG
             System.Threading.Thread.Sleep(_secondsPerFloor * 10);
-            #endif
+#endif
             CurrentFloor = floor;
             TotalFloorsTraveled++;
             OnFloor?.Invoke(floor);
@@ -110,8 +113,14 @@ namespace Elevators
 
         public void OpenDoors()
         {
-            // Simulate opening doors (could raise an event or just be a placeholder for now)
             OnDoorsOpened?.Invoke();
+            DoorStatus = DoorStatus.Open;
+        }
+
+        public void CloseDoors()
+        {
+            OnDoorsClosed?.Invoke();
+            DoorStatus = DoorStatus.Closed;
         }
     }
 }

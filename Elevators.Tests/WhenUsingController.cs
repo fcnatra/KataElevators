@@ -34,7 +34,7 @@ namespace Elevators.Tests
             var tcs = new TaskCompletionSource();
 
             var elevator = new Elevator(0, 10);
-            elevator.OnStop += (floor) => { floorReached = floor; tcs.SetResult(); };
+            elevator.OnAfterStop += (floor) => { floorReached = floor; tcs.SetResult(); };
             elevator.OnDoorsOpened += () => doorsOpened = true;
 
             var controller = new Controller(elevator);

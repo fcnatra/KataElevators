@@ -1,4 +1,5 @@
 
+using System.Diagnostics;
 using System.Dynamic;
 
 namespace Elevators
@@ -14,8 +15,16 @@ namespace Elevators
         public Controller(IElevator elevator)
         {
             _elevator = elevator;
-            _elevator.OnStop += OpenDoors;
+            CaptureElevatorEvents();
             Task.Run(async () => await StartRequestProcessingLoop());
+        }
+
+        private void CaptureElevatorEvents()
+        {
+            _elevator.OnAfterStop += RunStopActions;
+            _elevator.OnFloor += (floor) => Debug.WriteLine($"Elevator at floor {floor}");
+            _elevator.OnDoorsOpened += () => Debug.WriteLine($"Doors opened");
+            _elevator.OnDoorsClosed += () => Debug.WriteLine($"Doors closed");
         }
 
         private async Task StartRequestProcessingLoop()
@@ -28,6 +37,8 @@ namespace Elevators
                     continue;
                 
                 int nextFloor = _pendingRequests.Min;
+
+                _elevator.CloseDoors();
                 _elevator.GoToFloor(nextFloor);
             }
         }
@@ -43,9 +54,10 @@ namespace Elevators
             return _pendingRequests.Contains(floor);
         }
 
-        private void OpenDoors(int floor)
+        private void RunStopActions(int floor)
         {
-            System.Diagnostics.Debug.WriteLine($"Opening doors at floor {floor}");
+            Debug.WriteLine($"Elevator stopped at floor {floor}");
+
             if (_pendingRequests.Contains(floor))
                 _pendingRequests.Remove(floor);
 
