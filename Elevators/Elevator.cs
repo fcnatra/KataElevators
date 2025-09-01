@@ -53,25 +53,28 @@ namespace Elevators
             CurrentFloor = LowerFloor;
         }
 
-        public void GoToFloor(int destinationFloor)
+        public void GoToFloor(int targetFloor)
         {
-            if (destinationFloor > TopFloor)
-                destinationFloor = TopFloor;
+            if (Status == ElevatorStatus.Moving)
+                return;
 
-            if (destinationFloor < LowerFloor)
-                destinationFloor = LowerFloor;
+            if (targetFloor > TopFloor)
+                targetFloor = TopFloor;
+
+            if (targetFloor < LowerFloor)
+                targetFloor = LowerFloor;
 
             System.Threading.Tasks.Task.Run(() =>
             {
                 Status = ElevatorStatus.Moving;
                 OnBeforeMoving?.Invoke();
-                if (destinationFloor > CurrentFloor)
+                if (targetFloor > CurrentFloor)
                 {
-                    GoUp(destinationFloor);
+                    GoUp(targetFloor);
                 }
-                else if (destinationFloor < CurrentFloor)
+                else if (targetFloor < CurrentFloor)
                 {
-                    GoDown(destinationFloor);
+                    GoDown(targetFloor);
                 }
                 // If destinationFloor == CurrentFloor, do nothing
                 Status = ElevatorStatus.Stopped;

@@ -23,7 +23,7 @@ public interface IElevator
     Func<int>? NextStop { get; set; }
 
     double GetEnergyConsumption();
-    void GoToFloor(int destinationFloor);
+    void GoToFloor(int targetFloor);
     void OpenDoors();
     void CloseDoors();
 }
