@@ -81,7 +81,7 @@ namespace Elevators
             {
                 System.Threading.Tasks.Task.Run(() => MoveToFloor());
             }
-            // If destinationFloor == CurrentFloor, do nothing
+            else OnAfterStop?.Invoke(CurrentFloor);// If destinationFloor == CurrentFloor, do nothing
         }
 
         public void OpenDoors()
