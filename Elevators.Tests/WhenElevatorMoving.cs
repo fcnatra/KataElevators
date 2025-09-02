@@ -53,28 +53,6 @@ public class WhenElevatorMoving
     }
 
     [Fact]
-    public async Task ElevatorDoesNotGoBelowLowerFloor_AfterGoingUp()
-    {
-        // Arrange
-        var tcs = new TaskCompletionSource();
-        _elevator.OnAfterStop += _ => {
-            Debug.WriteLine($"Elevator stopped at floor {_elevator.CurrentFloor}");
-            tcs.SetResult();
-        };
-
-        _elevator.GoToFloor(4);
-        await tcs.Task;
-        tcs = new TaskCompletionSource();
-
-        // Act
-        _elevator.GoToFloor(-1);
-
-        // Assert
-        await tcs.Task;
-        Assert.Equal(_lowerFloor, _elevator.CurrentFloor);
-    }
-
-    [Fact]
     public async Task ElevatorDoesNotGoBelowLowerFloor()
     {
     // Arrange
@@ -111,24 +89,25 @@ public class WhenElevatorMoving
     }
 
     [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    public async Task DownElevatorGoesDown(int floor)
+    [InlineData(1, 0, 0)]
+    [InlineData(2, 0, 0)]
+    [InlineData(2, -2, 0)]
+    public async Task DownElevatorGoesDown(int floorUp, int floorDown, int finalFloor)
     {
         // Arrange
         var tcs = new TaskCompletionSource();
         _elevator.OnAfterStop += _ => { Debug.WriteLine($"Elevator stopped at floor {_elevator.CurrentFloor}"); tcs.SetResult(); };
 
         // Move elevator up first
-        _elevator.GoToFloor(floor);
+        _elevator.GoToFloor(floorUp);
         await tcs.Task;
         tcs = new TaskCompletionSource();
 
         // Act
-        _elevator.GoToFloor(0);
+        _elevator.GoToFloor(floorDown);
 
         // Assert
         await tcs.Task;
-        Assert.Equal(0, _elevator.CurrentFloor);
+        Assert.Equal(finalFloor, _elevator.CurrentFloor);
     }
 }
