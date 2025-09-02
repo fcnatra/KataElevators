@@ -41,8 +41,8 @@ public class WhenElevatorMoving
         int stopCount = 0;
         _elevator.OnAfterStop += _ => { stopCount++; if (stopCount == 3) tcs.SetResult(); };
 
-        _elevator.GoToFloor(8); // Go up to floor 8
-        _elevator.GoToFloor(5); // Go down to floor 5
+        _elevator.GoToFloor(8);
+        _elevator.GoToFloor(5);
 
         // Act
         _elevator.GoToFloor(15); // Try to go above top floor

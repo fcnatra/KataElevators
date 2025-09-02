@@ -1,7 +1,4 @@
-using Xunit;
-using Elevators;
 using FakeItEasy;
-using Microsoft.VisualBasic;
 
 namespace Elevators.Tests
 {
@@ -99,7 +96,6 @@ namespace Elevators.Tests
         {
             // Arrange
             var tcs = new TaskCompletionSource();
-
             _elevator.OnDoorsOpened += () => tcs.SetResult();
 
             var controller = new Controller(_elevator);
