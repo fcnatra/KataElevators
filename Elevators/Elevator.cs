@@ -62,43 +62,32 @@ namespace Elevators
 
             if (targetFloor < LowerFloor)
                 targetFloor = LowerFloor;
-
-            System.Threading.Tasks.Task.Run(() =>
+                
+            if (targetFloor != CurrentFloor)
             {
-                Status = ElevatorStatus.Moving;
-                OnBeforeMoving?.Invoke();
-                if (targetFloor > CurrentFloor)
-                {
-                    GoUp(targetFloor);
-                }
-                else if (targetFloor < CurrentFloor)
-                {
-                    GoDown(targetFloor);
-                }
-                // If destinationFloor == CurrentFloor, do nothing
-                Status = ElevatorStatus.Stopped;
-                OnAfterStop?.Invoke(CurrentFloor);
-            });
+                System.Threading.Tasks.Task.Run(() => MoveToFloor(targetFloor));
+            }
+            // If destinationFloor == CurrentFloor, do nothing
         }
 
-        internal void GoDown(int targetFloor)
+
+        internal void MoveToFloor(int targetFloor)
         {
             int start = CurrentFloor;
-            int end = Math.Max(targetFloor, 0);
+            int end = Math.Max(LowerFloor, Math.Min(targetFloor, TopFloor)); // keep within bounds
+            int step = end > start ? 1 : -1;
 
+            OnBeforeMoving?.Invoke();
             Status = ElevatorStatus.Moving;
-            for (int floor = start - 1; floor >= end; floor--)
-                SetCurrentFloor(floor);
-        }
 
-        internal void GoUp(int targetFloor)
-        {
-            int start = CurrentFloor;
-            int end = Math.Min(targetFloor, TopFloor);
+            for (int floor = start; floor != end; floor += step)
+            {
+                System.Threading.Thread.Sleep(SecondsPerFloor * 1000); // Simulate time taken to move between floors
+                SetCurrentFloor(floor + step);
+            }
 
-            Status = ElevatorStatus.Moving;
-            for (int floor = start + 1; floor <= end; floor++)
-                SetCurrentFloor(floor);
+            Status = ElevatorStatus.Stopped;
+            OnAfterStop?.Invoke(CurrentFloor);
         }
 
         private void SetCurrentFloor(int floor)
@@ -106,7 +95,6 @@ namespace Elevators
             CurrentFloor = floor;
             TotalFloorsTraveled++;
             OnFloor?.Invoke(floor);
-            System.Threading.Thread.Sleep(SecondsPerFloor * 1000);
         }
 
         public void OpenDoors()

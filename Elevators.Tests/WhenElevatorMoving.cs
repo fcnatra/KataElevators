@@ -1,4 +1,6 @@
-﻿namespace Elevators.Tests;
+﻿using System.Diagnostics;
+
+namespace Elevators.Tests;
 
 public class WhenElevatorMoving
 {
@@ -55,10 +57,14 @@ public class WhenElevatorMoving
     {
         // Arrange
         var tcs = new TaskCompletionSource();
-
-        _elevator.OnAfterStop += _ => tcs.SetResult();
+        _elevator.OnAfterStop += _ => {
+            Debug.WriteLine($"Elevator stopped at floor {_elevator.CurrentFloor}");
+            tcs.SetResult();
+        };
 
         _elevator.GoToFloor(4);
+        await tcs.Task;
+        tcs = new TaskCompletionSource();
 
         // Act
         _elevator.GoToFloor(-1);
@@ -71,17 +77,19 @@ public class WhenElevatorMoving
     [Fact]
     public async Task ElevatorDoesNotGoBelowLowerFloor()
     {
-        // Arrange
-        var tcs = new TaskCompletionSource();
+    // Arrange
+    bool beforeMovingCalled = false;
+    _elevator.OnBeforeMoving += () => beforeMovingCalled = true;
 
-        _elevator.OnAfterStop += _ => tcs.SetResult();
+    // Act
+    _elevator.GoToFloor(-4);
 
-        // Act
-        _elevator.GoToFloor(-4);
+    // Wait at least the time it would take to move one floor
+    await Task.Delay(_elevator.SecondsPerFloor * 1000);
 
-        // Assert
-        await tcs.Task;
-        Assert.Equal(_lowerFloor, _elevator.CurrentFloor);
+    // Assert
+    Assert.False(beforeMovingCalled); // Should not have moved
+    Assert.Equal(_lowerFloor, _elevator.CurrentFloor);
     }
 
     [Theory]
@@ -92,7 +100,7 @@ public class WhenElevatorMoving
         // Arrange
         var tcs = new TaskCompletionSource();
 
-        _elevator.OnAfterStop += _ => tcs.SetResult();
+        _elevator.OnAfterStop += _ => { Debug.WriteLine($"Elevator stopped at floor {_elevator.CurrentFloor}"); tcs.SetResult(); };
 
         // Act
         _elevator.GoToFloor(floor);
@@ -108,11 +116,13 @@ public class WhenElevatorMoving
     public async Task DownElevatorGoesDown(int floor)
     {
         // Arrange
-        var tcs = new System.Threading.Tasks.TaskCompletionSource();
-        _elevator.OnAfterStop += _ => tcs.SetResult();
+        var tcs = new TaskCompletionSource();
+        _elevator.OnAfterStop += _ => { Debug.WriteLine($"Elevator stopped at floor {_elevator.CurrentFloor}"); tcs.SetResult(); };
 
         // Move elevator up first
         _elevator.GoToFloor(floor);
+        await tcs.Task;
+        tcs = new TaskCompletionSource();
 
         // Act
         _elevator.GoToFloor(0);
