@@ -1,12 +1,12 @@
 ﻿namespace Elevators.Tests;
 
-public class WhenMoving
+public class WhenElevatorMoving
 {
     private int _topFloor;
     private int _lowerFloor;
     private Elevator _elevator;
 
-    public WhenMoving()
+    public WhenElevatorMoving()
     {
         _topFloor = 10;
         _lowerFloor = 0;

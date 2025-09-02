@@ -16,6 +16,31 @@ namespace Elevators.Tests
         }
 
         [Fact]
+        public async Task Controller_AttendsToAllThreeRequests_RegardlessOfOrder()
+        {
+            // Arrange
+            var attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) =>
+            {
+                attendedFloors.Add(floor);
+                if (attendedFloors.Count == 3) tcs.SetResult();
+            };
+            var controller = new Controller(_elevator);
+
+            // Act
+            controller.SelectDestinationFloor(6); // up
+            controller.SelectDestinationFloor(1); // down (before reaching 6)
+            controller.SelectDestinationFloor(3); // up (before reaching 6)
+
+            // Assert
+            await tcs.Task;
+            Assert.Contains(1, attendedFloors);
+            Assert.Contains(3, attendedFloors);
+            Assert.Contains(6, attendedFloors);
+        }
+
+        [Fact]
         public void SelectingDestinationFloor_AddsToCorrectRequestList()
         {
             // Arrange
@@ -68,7 +93,7 @@ namespace Elevators.Tests
             // Assert
             Assert.True(controller.HasPendingRequestForFloor(destinationFloor));
         }
-        
+
         [Fact]
         public async Task DownRequestMovesElevatorToTheDesiredFloor()
         {

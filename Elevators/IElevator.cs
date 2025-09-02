@@ -20,7 +20,6 @@ public interface IElevator
     Action<int>? OnAfterStop { get; set; }
     Action? OnDoorsOpened { get; set; }
     Action? OnDoorsClosed { get; set; }
-    Func<int>? NextStop { get; set; }
 
     double GetEnergyConsumption();
     void GoToFloor(int targetFloor);

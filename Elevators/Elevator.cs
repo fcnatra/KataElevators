@@ -10,7 +10,6 @@ namespace Elevators
         public Action<int>? OnAfterStop { get; set; }
         public Action? OnDoorsOpened { get; set; }
         public Action? OnDoorsClosed { get; set; }
-        public Func<int>? NextStop { get; set; }
         public int TopFloor { get; }
         public int CurrentFloor { get; internal set; }
         public int LowerFloor { get; }
@@ -104,10 +103,10 @@ namespace Elevators
 
         private void SetCurrentFloor(int floor)
         {
-            System.Threading.Thread.Sleep(SecondsPerFloor * 1000);
             CurrentFloor = floor;
             TotalFloorsTraveled++;
             OnFloor?.Invoke(floor);
+            System.Threading.Thread.Sleep(SecondsPerFloor * 1000);
         }
 
         public void OpenDoors()
