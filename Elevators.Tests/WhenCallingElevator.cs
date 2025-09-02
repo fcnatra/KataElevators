@@ -104,5 +104,11 @@ namespace Elevators.Tests
             Assert.Equal(7, _elevator.CurrentFloor);
             Assert.Equal(new[] { 1, 4, 7 }, attendedFloors);
         }
+
+        [Fact]
+        public async Task UpFrom4th_WhileMovingAbove5th_ItReturnsAfterFinishingUpwardMovement()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
