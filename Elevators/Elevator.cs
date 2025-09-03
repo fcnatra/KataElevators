@@ -11,6 +11,8 @@ namespace Elevators
         public DoorStatus DoorStatus { get; private set; } = DoorStatus.Open;
         public bool IsMovingUp => Status == ElevatorStatus.MovingUp;
         public bool IsMovingDown => Status == ElevatorStatus.MovingDown;
+        public bool IsMoving => IsMovingUp || IsMovingDown || Status == ElevatorStatus.ProcessingMovement;
+
         public ElevatorStatus LastMovementDirection { get; private set; } = ElevatorStatus.Stopped;
 
         public Action<int>? OnFloor { get; set; }
@@ -63,12 +65,13 @@ namespace Elevators
 
         public void GoToFloor(int targetFloor)
         {
-            if (Status != ElevatorStatus.Stopped)
+            if (IsMoving)
             {
                 TryToAddANewStopToThisMovement(targetFloor);
                 return;
             }
-            
+
+            Status = ElevatorStatus.ProcessingMovement;
             if (targetFloor > TopFloor)
                 targetFloor = TopFloor;
 
@@ -111,7 +114,7 @@ namespace Elevators
 
         private bool CanAddStopUpAt(int floor)
         {
-            if (!IsMovingUp) return false;
+            if (!IsMoving) return false;
 
             int current = CurrentFloor;
             int target = _currentTargetFloor;
@@ -121,7 +124,7 @@ namespace Elevators
 
         private bool CanAddStopDownAt(int floor)
         {
-            if (!IsMovingDown) return false;
+            if (!IsMoving) return false;
 
             int current = CurrentFloor;
             int target = _currentTargetFloor;

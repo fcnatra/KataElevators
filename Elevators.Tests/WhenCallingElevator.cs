@@ -80,20 +80,29 @@ namespace Elevators.Tests
 
         [Theory]
         [InlineData(1, 7, 4, new[] { 1, 4, 7 })]
-        [InlineData(5, 4, 7, new[] { 4, 5, 7 })]
+        [InlineData(5, 7, 4, new[] { 4, 5, 7 })]
         public async Task FromFloorsInTheSameDirection_CapturesCall(int start, int end, int call, int[] expectedFloors)
         {
             // Arrange
             var attendedFloors = new HashSet<int>();
             var tcs = new TaskCompletionSource();
-            _elevator.OnAfterStop += (floor) => { attendedFloors.Add(floor); if (floor == 7) tcs.SetResult(); };
 
             var controller = new Controller(_elevator);
+            _elevator.OnDoorsOpened += () => 
+            {
+                if (_elevator.CurrentFloor == start)
+                    controller.SelectDestinationFloor(end);
+            };
+
+            _elevator.OnAfterStop += (floor) =>
+            {
+                attendedFloors.Add(floor);
+                if (floor == 7) tcs.SetResult();
+            };
+
             controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
+
             controller.CallElevatorUp(start);
-            controller.SelectDestinationFloor(end);
-            // await tcs.Task;
-            // tcs = new TaskCompletionSource();
             
             // Act
             controller.CallElevatorUp(call);

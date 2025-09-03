@@ -21,10 +21,17 @@ namespace Elevators
 
         public void CallElevatorUp(int floor)
         {
-            Debug.WriteLine($"Called from floor {floor}");
+            Debug.WriteLine($"Called UP from floor {floor}");
             AddFloorToQueue(floor);
-            if (_elevator.IsMovingUp)
+            ForceElevatorToTakeTheCallIfItsInthePath(floor);
+        }
+
+        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
+        {
+            Debug.WriteLine($"Called when elevator is {_elevator.Status}");
+            if (_elevator.IsMoving)
             {
+                Debug.WriteLine($"Forcing to take the call from floor {floor} if it's in the path");
                 _elevator.GoToFloor(floor);
             }
         }
@@ -107,7 +114,10 @@ namespace Elevators
         private void AddFloorToQueue(int floor)
         {
             if (!_pendingRequests.Contains(floor))
+            {
+                Debug.WriteLine($"Added floor {floor} to the queue");
                 _pendingRequests.Add(floor);
+            }
         }
 
         private void RemoveFloorFromQueue(int floor)

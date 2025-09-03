@@ -6,6 +6,8 @@ public interface IElevator
     DoorStatus DoorStatus { get; }
     ElevatorStatus LastMovementDirection { get; }
     bool IsMovingUp { get; }
+    bool IsMovingDown { get; }
+    bool IsMoving { get; }
 
     double EnergyConsumptionKWH { get; set; }
     int SecondsPerFloor { get; set; }
