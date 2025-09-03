@@ -9,6 +9,8 @@ namespace Elevators
         private readonly IElevator _elevator;
         private readonly HashSet<int> _pendingRequests = new();
         private bool NoPendingMovements => _pendingRequests.Count == 0;
+        public bool ElevatorIsIdle => _elevator.Status == ElevatorStatus.Stopped && NoPendingMovements;
+        public Action? OnElevatorIdle;
 
         public Controller(IElevator elevator)
         {
@@ -97,6 +99,9 @@ namespace Elevators
             Debug.WriteLine($"Elevator stopped at floor {floor}");
             RemoveFloorFromQueue(floor);
             _elevator.OpenDoors();
+
+            if (ElevatorIsIdle)
+                OnElevatorIdle?.Invoke();
         }
 
         private void AddFloorToQueue(int floor)

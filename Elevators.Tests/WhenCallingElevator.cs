@@ -21,9 +21,9 @@ namespace Elevators.Tests
 
             // Act
             controller.CallElevatorUp(3);
+            await tcs.Task;
 
             // Assert
-            await tcs.Task;
             Assert.Equal(3, _elevator.CurrentFloor);
         }
 
@@ -49,9 +49,9 @@ namespace Elevators.Tests
             // Act
             controller.SelectDestinationFloor(5);
             controller.SelectDestinationFloor(2);
+            await tcs.Task;
 
             // Assert
-            await tcs.Task;
             Assert.Equal(2, _elevator.CurrentFloor);
             Assert.Equal(new[] { 3, 5, 2 }, attendedFloors);
         }
@@ -71,35 +71,35 @@ namespace Elevators.Tests
 
             // Act
             controller.CallElevatorUp(4);
+            await tcs.Task;
 
             // Assert
-            await tcs.Task;
             Assert.Equal(6, _elevator.CurrentFloor);
             Assert.Equal(new[] { 3, 4, 6 }, attendedFloors);
         }
 
         [Theory]
         [InlineData(1, 7, 4, new[] { 1, 4, 7 })]
+        [InlineData(5, 4, 7, new[] { 4, 5, 7 })]
         public async Task FromFloorsInTheSameDirection_CapturesCall(int start, int end, int call, int[] expectedFloors)
         {
             // Arrange
             var attendedFloors = new HashSet<int>();
-            var movements = 0;
             var tcs = new TaskCompletionSource();
-            _elevator.OnBeforeMoving += () => { movements++; if (movements == 2) tcs.SetResult(); };
             _elevator.OnAfterStop += (floor) => { attendedFloors.Add(floor); if (floor == 7) tcs.SetResult(); };
 
             var controller = new Controller(_elevator);
+            controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
             controller.CallElevatorUp(start);
             controller.SelectDestinationFloor(end);
-            await tcs.Task;
-            tcs = new TaskCompletionSource();
+            // await tcs.Task;
+            // tcs = new TaskCompletionSource();
             
             // Act
             controller.CallElevatorUp(call);
+            await tcs.Task;
 
             // Assert
-            await tcs.Task;
             Assert.Equal(7, _elevator.CurrentFloor);
             Assert.Equal(expectedFloors, attendedFloors);
         }
