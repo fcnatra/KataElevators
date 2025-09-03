@@ -1,7 +1,3 @@
-using System.Runtime;
-using System.Threading.Tasks;
-using FakeItEasy;
-
 namespace Elevators.Tests
 {
     public class WhenCallingElevator
@@ -22,6 +18,8 @@ namespace Elevators.Tests
             _elevator.OnAfterStop += (floor) => tcs.SetResult();
 
             var controller = new Controller(_elevator);
+
+            // Act
             controller.CallElevatorUp(3);
 
             // Assert
@@ -61,7 +59,7 @@ namespace Elevators.Tests
         [Fact]
         public async Task WhileRespondingCallsUpTo3rd_ProcessesUpCallsTo4th()
         {
-            // Assert
+            // Arrange
             var stops = 0;
             var attendedFloors = new HashSet<int>();
             var tcs = new TaskCompletionSource();
@@ -83,7 +81,7 @@ namespace Elevators.Tests
         [Fact]
         public async Task WhileMovingUpTo7th_CapturesCallFrom4th()
         {
-            // Assert
+            // Arrange
             var attendedFloors = new HashSet<int>();
             var movements = 0;
             var tcs = new TaskCompletionSource();
@@ -106,9 +104,26 @@ namespace Elevators.Tests
         }
 
         [Fact]
-        public async Task UpFrom4th_WhileMovingAbove5th_ItReturnsAfterFinishingUpwardMovement()
+        public async Task UpFrom4th_WhileMovingUpAbove5th_ItReturnsAfterFinishingUpwardMovement()
         {
-            throw new NotImplementedException();
+            // Arrange
+            HashSet<int> attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) => { attendedFloors.Add(floor); if (floor == 4) tcs.SetResult(); };
+
+
+            var controller = new Controller(_elevator);
+
+            controller.CallElevatorUp(5);
+            controller.SelectDestinationFloor(8);
+            controller.SelectDestinationFloor(9);
+
+            // Act
+            controller.CallElevatorUp(4);
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(new[] { 5, 8, 9, 4 }, attendedFloors);
         }
     }
 }
