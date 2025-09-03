@@ -78,8 +78,9 @@ namespace Elevators.Tests
             Assert.Equal(new[] { 3, 4, 6 }, attendedFloors);
         }
 
-        [Fact]
-        public async Task WhileMovingUpTo7th_CapturesCallFrom4th()
+        [Theory]
+        [InlineData(1, 7, 4, new[] { 1, 4, 7 })]
+        public async Task FromFloorsInTheSameDirection_CapturesCall(int start, int end, int call, int[] expectedFloors)
         {
             // Arrange
             var attendedFloors = new HashSet<int>();
@@ -89,18 +90,18 @@ namespace Elevators.Tests
             _elevator.OnAfterStop += (floor) => { attendedFloors.Add(floor); if (floor == 7) tcs.SetResult(); };
 
             var controller = new Controller(_elevator);
-            controller.CallElevatorUp(1);
-            controller.SelectDestinationFloor(7);
+            controller.CallElevatorUp(start);
+            controller.SelectDestinationFloor(end);
             await tcs.Task;
             tcs = new TaskCompletionSource();
             
             // Act
-            controller.CallElevatorUp(4);
+            controller.CallElevatorUp(call);
 
             // Assert
             await tcs.Task;
             Assert.Equal(7, _elevator.CurrentFloor);
-            Assert.Equal(new[] { 1, 4, 7 }, attendedFloors);
+            Assert.Equal(expectedFloors, attendedFloors);
         }
 
         [Fact]
