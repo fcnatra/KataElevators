@@ -111,6 +111,7 @@ namespace Elevators
 
         private int GetNextFloor()
         {
+            // TO DO: If the elevator is moving, inner selections have priority over external calls.
             var allRequests = GetInternalAndExternalCalls();
             if (allRequests.Count == 0)
                 throw new InvalidOperationException("No pending requests.");
