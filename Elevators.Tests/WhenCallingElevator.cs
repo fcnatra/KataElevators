@@ -22,7 +22,7 @@ namespace Elevators.Tests
             var controller = new Controller(_elevator);
 
             // Act
-            controller.CallElevatorUp(3);
+            controller.CallElevator(3, CallDirection.Up);
             await tcs.Task;
 
             // Assert
@@ -52,8 +52,8 @@ namespace Elevators.Tests
             };
             controller.OnElevatorIdle += () => tcs.SetResult();
 
-            if (direction == 1) controller.CallElevatorUp(call);
-            else controller.CallElevatorDown(call);
+            if (direction == 1) controller.CallElevator(call, CallDirection.Up);
+            else controller.CallElevator(call, CallDirection.Down);
 
             // Act
             await tcs.Task;
@@ -88,10 +88,10 @@ namespace Elevators.Tests
 
             controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
 
-            controller.CallElevatorUp(firstCall);
+            controller.CallElevator(firstCall, CallDirection.Up);
 
             // Act
-            controller.CallElevatorUp(secondCall);
+            controller.CallElevator(secondCall, CallDirection.Up);
             await tcs.Task;
 
             // Assert
@@ -123,11 +123,11 @@ namespace Elevators.Tests
                     controller.SelectDestinationFloor(9);
                 }
             };
-            controller.CallElevatorUp(5);
+            controller.CallElevator(5, CallDirection.Up);
             await tcs.Task;
 
             // Act
-            controller.CallElevatorUp(4);
+            controller.CallElevator(4, CallDirection.Up);
             await tcs.Task;
 
             // Assert
@@ -149,7 +149,7 @@ namespace Elevators.Tests
             controller.OnElevatorIdle += () => tcs.SetResult();
 
             // Act
-            controller.CallElevatorUp(5);
+            controller.CallElevator(5, CallDirection.Up);
 
             // Assert
             await tcs.Task;
@@ -165,12 +165,12 @@ namespace Elevators.Tests
             _elevator.OnAfterStop += (floor) =>
             {
                 if (floor == 3)
-                    controller.CallElevatorDown(2); // Act
+                    controller.CallElevator(2, CallDirection.Down); // Act
                 else
                     tcs.SetResult();
             };
 
-            controller.CallElevatorUp(3);
+            controller.CallElevator(3, CallDirection.Up);
 
             // Act
             await tcs.Task;

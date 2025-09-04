@@ -18,17 +18,10 @@ namespace Elevators
             Task.Run(async () => await StartRequestProcessingLoop());
         }
 
-        public void CallElevatorUp(int floor)
+        public void CallElevator(int floor, CallDirection direction)
         {
-            Debug.WriteLine($"Called UP from floor {floor} with status {{_elevator.Status}});");
-            AddExternalCall(floor, CallDirection.Up);
-            ForceElevatorToTakeTheCallIfItsInthePath(floor);
-        }
-
-        public void CallElevatorDown(int floor)
-        {
-            Debug.WriteLine($"Called DOWN from floor {floor} with status {{_elevator.Status}});");
-            AddExternalCall(floor, CallDirection.Down);
+            Debug.WriteLine($"Called {direction} from floor {floor} with status {{_elevator.Status}});");
+            AddExternalCall(floor, direction);
             ForceElevatorToTakeTheCallIfItsInthePath(floor);
         }
 
