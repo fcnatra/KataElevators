@@ -1,5 +1,6 @@
 
 using System.Diagnostics;
+using System.Formats.Asn1;
 using System.Globalization;
 
 namespace Elevators
@@ -21,14 +22,13 @@ namespace Elevators
 
         public void CallElevatorUp(int floor)
         {
-            Debug.WriteLine($"Called UP from floor {floor}");
+            Debug.WriteLine($"Called UP from floor {floor} with status {_elevator.Status}");
             AddFloorToQueue(floor);
             ForceElevatorToTakeTheCallIfItsInthePath(floor);
         }
 
         private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
         {
-            Debug.WriteLine($"Called when elevator is {_elevator.Status}");
             if (_elevator.IsMoving)
             {
                 Debug.WriteLine($"Forcing to take the call from floor {floor} if it's in the path");
@@ -64,9 +64,9 @@ namespace Elevators
 
                 if (_elevator.IsMoving || NoPendingMovements)
                     continue;
-                
+
                 int nextFloor = GetNextFloor();
-                
+
                 if (!_elevator.IsStoppedAt(nextFloor))
                     CloseDoors();
                 _elevator.GoToFloor(nextFloor);
@@ -77,7 +77,7 @@ namespace Elevators
         {
             if (_elevator.DoorStatus == DoorStatus.Open) _elevator.CloseDoors();
         }
-        
+
         private int GetNextFloor()
         {
             if (MovingUpAndRequestAbove())
@@ -86,7 +86,12 @@ namespace Elevators
             if (MovingDownAndRequestBelow() || MovingUpButNoMoreMovementsAbove())
                 return _pendingRequests.Where(f => f < _elevator.CurrentFloor).Max();
 
-            return _pendingRequests.First();
+            return GetClosestPendingCall();
+        }
+
+        private int GetClosestPendingCall()
+        {
+            return _pendingRequests.OrderBy(f => Math.Abs(f - _elevator.CurrentFloor)).First();
         }
 
         private bool MovingUpButNoMoreMovementsAbove()
