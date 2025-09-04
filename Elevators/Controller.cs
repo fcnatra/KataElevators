@@ -1,17 +1,14 @@
-
 using System.Diagnostics;
-using System.Formats.Asn1;
-using System.Globalization;
 
 namespace Elevators
 {
     public class Controller
     {
         private readonly IElevator _elevator;
-    private readonly HashSet<int> _pendingExternalCalls = new();
-    private readonly HashSet<int> _pendingInternalSelections = new();
-    private bool NoPendingMovements => _pendingExternalCalls.Count == 0 && _pendingInternalSelections.Count == 0;
-    public bool ElevatorIsIdle => _elevator.Status == ElevatorStatus.Stopped && NoPendingMovements;
+        private readonly HashSet<ExternalCall> _pendingExternalCalls = new();
+        private readonly HashSet<int> _pendingInternalSelections = new();
+        private bool NoPendingMovements => _pendingExternalCalls.Count == 0 && _pendingInternalSelections.Count == 0;
+        public bool ElevatorIsIdle => _elevator.Status == ElevatorStatus.Stopped && NoPendingMovements;
         public Action? OnElevatorIdle;
 
         public Controller(IElevator elevator)
@@ -23,22 +20,16 @@ namespace Elevators
 
         public void CallElevatorUp(int floor)
         {
-            Debug.WriteLine($"Called UP from floor {floor} with status {{_elevator.Status}}");
-            AddExternalCall(floor);
+            Debug.WriteLine($"Called UP from floor {floor} with status {{_elevator.Status}});");
+            AddExternalCall(floor, CallDirection.Up);
             ForceElevatorToTakeTheCallIfItsInthePath(floor);
         }
 
         public void CallElevatorDown(int floor)
         {
-            Debug.WriteLine($"Called DOWN from floor {floor} with status {{_elevator.Status}}");
-            AddExternalCall(floor);
+            Debug.WriteLine($"Called DOWN from floor {floor} with status {{_elevator.Status}});");
+            AddExternalCall(floor, CallDirection.Down);
             ForceElevatorToTakeTheCallIfItsInthePath(floor);
-        }
-
-        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
-        {
-            if (_elevator.IsMoving)
-                _elevator.GoToFloor(floor);
         }
 
         public void SelectDestinationFloor(int floor)
@@ -49,7 +40,45 @@ namespace Elevators
 
         public bool HasPendingRequestForFloor(int floor)
         {
-            return _pendingExternalCalls.Contains(floor) || _pendingInternalSelections.Contains(floor);
+            return _pendingExternalCalls.Any(c => c.Floor == floor) || _pendingInternalSelections.Contains(floor);
+        }
+
+        private void AddExternalCall(int floor, CallDirection direction)
+        {
+            var call = new ExternalCall(floor, direction);
+            if (!_pendingExternalCalls.Contains(call))
+            {
+                Debug.WriteLine($"Added external call for floor {floor} direction {direction}");
+                _pendingExternalCalls.Add(call);
+            }
+        }
+
+        private void AddInternalSelection(int floor)
+        {
+            if (!_pendingInternalSelections.Contains(floor))
+            {
+                Debug.WriteLine($"Added internal selection for floor {floor}");
+                _pendingInternalSelections.Add(floor);
+            }
+        }
+
+        private void RemoveFloorFromQueues(int floor)
+        {
+            var toRemove = _pendingExternalCalls.Where(c => c.Floor == floor).ToList();
+            foreach (var call in toRemove)
+                _pendingExternalCalls.Remove(call);
+            if (_pendingInternalSelections.Contains(floor))
+                _pendingInternalSelections.Remove(floor);
+        }
+
+        private List<int> GetInternalAndExternalCalls() => _pendingInternalSelections.Concat(_pendingExternalCalls.Select(c => c.Floor)).ToList();
+
+        private bool NoPendingMovementsFunc() => _pendingExternalCalls.Count == 0 && _pendingInternalSelections.Count == 0;
+
+        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
+        {
+            if (_elevator.IsMoving)
+                _elevator.GoToFloor(floor);
         }
 
         private void CaptureElevatorEvents()
@@ -98,8 +127,6 @@ namespace Elevators
             return allRequests.OrderBy(f => Math.Abs(f - _elevator.CurrentFloor)).First();
         }
 
-        private List<int> GetInternalAndExternalCalls() => _pendingInternalSelections.Concat(_pendingExternalCalls).ToList();
-
         private bool MovingUpButNoMoreMovementsAbove()
         {
             var allRequests = GetInternalAndExternalCalls();
@@ -129,33 +156,6 @@ namespace Elevators
 
             if (ElevatorIsIdle)
                 OnElevatorIdle?.Invoke();
-        }
-
-        private void AddExternalCall(int floor)
-        {
-            if (!_pendingExternalCalls.Contains(floor))
-            {
-                Debug.WriteLine($"Added external call for floor {floor}");
-                _pendingExternalCalls.Add(floor);
-            }
-        }
-
-        private void AddInternalSelection(int floor)
-        {
-            if (!_pendingInternalSelections.Contains(floor))
-            {
-                Debug.WriteLine($"Added internal selection for floor {floor}");
-                _pendingInternalSelections.Add(floor);
-            }
-        }
-
-        private void RemoveFloorFromQueues(int floor)
-        {
-            if (_pendingExternalCalls.Contains(floor))
-                _pendingExternalCalls.Remove(floor);
-
-            if (_pendingInternalSelections.Contains(floor))
-                _pendingInternalSelections.Remove(floor);
         }
     }
 }
