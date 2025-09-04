@@ -148,7 +148,7 @@ namespace Elevators
             int floor = start;
             while (floor != end)
             {
-                System.Threading.Thread.Sleep(SecondsPerFloor * 200); // Simulate time taken to move between floors
+                //System.Threading.Thread.Sleep(SecondsPerFloor * 200); // Simulate time taken to move between floors
                 floor += step;
                 SetCurrentFloor(floor);
                 end = CheckIfTargetHasChanged(end);

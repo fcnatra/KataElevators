@@ -29,10 +29,14 @@ namespace Elevators.Tests
             Assert.Equal(3, _elevator.CurrentFloor);
         }
 
-        [Fact]
-        public async Task Up_HandleUpwardCallsFirst()
+        [Theory]
+        [InlineData(3, 1, new[] { 5, 2 }, new[] { 3, 5, 2 })]
+        [InlineData(3, 0, new[] { 5, 2 }, new[] { 3, 2, 5 })]
+        public async Task OnADirection_FirstHandleCallsToThatDirection(int call, int direction, int[] selections, int[] expected)
         {
             // Arrange
+            var controller = new Controller(_elevator);
+
             var attendedFloors = new HashSet<int>();
             var stops = 0;
             var tcs = new TaskCompletionSource();
@@ -40,59 +44,39 @@ namespace Elevators.Tests
             {
                 attendedFloors.Add(_elevator.CurrentFloor);
                 stops++;
-                if (stops == 1 || stops == 3) tcs.SetResult();
+                if (_elevator.IsStoppedAt(call))
+                {
+                    controller.SelectDestinationFloor(selections[0]);
+                    controller.SelectDestinationFloor(selections[1]);
+                }
             };
+            controller.OnElevatorIdle += () => tcs.SetResult();
 
-            var controller = new Controller(_elevator);
-            controller.CallElevatorUp(3);
-            await tcs.Task;
-            tcs = new TaskCompletionSource();
+            if (direction == 1) controller.CallElevatorUp(call);
+            else controller.CallElevatorDown(call);
 
             // Act
-            controller.SelectDestinationFloor(5);
-            controller.SelectDestinationFloor(2);
             await tcs.Task;
 
             // Assert
-            Assert.Equal(2, _elevator.CurrentFloor);
-            Assert.Equal(new[] { 3, 5, 2 }, attendedFloors);
-        }
-
-        [Fact]
-        public async Task WhileRespondingCallsUpTo3rd_ProcessesUpCallsTo4th()
-        {
-            // Arrange
-            var stops = 0;
-            var attendedFloors = new HashSet<int>();
-            var tcs = new TaskCompletionSource();
-            _elevator.OnAfterStop += (floor) => { stops++; attendedFloors.Add(floor); if (stops == 3) tcs.SetResult(); };
-
-            var controller = new Controller(_elevator);
-            controller.CallElevatorUp(3);
-            controller.SelectDestinationFloor(6);
-
-            // Act
-            controller.CallElevatorUp(4);
-            await tcs.Task;
-
-            // Assert
-            Assert.Equal(6, _elevator.CurrentFloor);
-            Assert.Equal(new[] { 3, 4, 6 }, attendedFloors);
+            Assert.Equal(selections.Last(), _elevator.CurrentFloor);
+            Assert.Equal(expected, attendedFloors);
         }
 
         [Theory]
         [InlineData(1, 7, 4, new[] { 1, 4, 7 })]
         [InlineData(5, 7, 4, new[] { 4, 5, 7 })]
-        public async Task FromFloorsInTheSameDirection_CapturesCall(int firstCall, int destination, int secondCall, int[] expectedFloors)
+        [InlineData(3, 6, 4, new[] { 3, 4, 6 })]
+        public async Task UpFromDifferentFloors_CapturesAllCalls(int firstCall, int destination, int secondCall, int[] expectedFloors)
         {
             // Arrange
             var attendedFloors = new HashSet<int>();
             var tcs = new TaskCompletionSource();
 
             var controller = new Controller(_elevator);
-            _elevator.OnDoorsOpened += () => 
+            _elevator.OnDoorsOpened += () =>
             {
-                if (_elevator.CurrentFloor == firstCall)
+                if (_elevator.IsStoppedAt(firstCall))
                     controller.SelectDestinationFloor(destination);
             };
 
@@ -105,7 +89,7 @@ namespace Elevators.Tests
             controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
 
             controller.CallElevatorUp(firstCall);
-            
+
             // Act
             controller.CallElevatorUp(secondCall);
             await tcs.Task;
@@ -124,13 +108,14 @@ namespace Elevators.Tests
             HashSet<int> attendedFloors = new HashSet<int>();
             var tcs = new TaskCompletionSource();
 
-            _elevator.OnAfterStop += (floor) => {
+            _elevator.OnAfterStop += (floor) =>
+            {
                 attendedFloors.Add(floor);
                 if (floor == 4) tcs.SetResult();
             };
             _elevator.OnDoorsOpened += () =>
             {
-                if (_elevator.CurrentFloor == 5)
+                if (_elevator.IsStoppedAt(5))
                 {
                     tcs.SetResult();
                     tcs = new TaskCompletionSource();
@@ -140,7 +125,7 @@ namespace Elevators.Tests
             };
             controller.CallElevatorUp(5);
             await tcs.Task;
-            
+
             // Act
             controller.CallElevatorUp(4);
             await tcs.Task;
@@ -148,5 +133,52 @@ namespace Elevators.Tests
             // Assert
             Assert.Equal(new[] { 5, 8, 9, 4 }, attendedFloors);
         }
+
+        [Fact]
+        public async Task UpButSelectingDown_GoesDown()
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+            _elevator.OnDoorsOpened += () =>
+            {
+                if (_elevator.IsStoppedAt(5))
+                    controller.SelectDestinationFloor(2);
+            };
+
+            var tcs = new TaskCompletionSource();
+            controller.OnElevatorIdle += () => tcs.SetResult();
+
+            // Act
+            controller.CallElevatorUp(5);
+
+            // Assert
+            await tcs.Task;
+            Assert.Equal(2, _elevator.CurrentFloor);
+        }
+
+        [Fact]
+        public async Task Down_GoesToTheCallingFloor()
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) =>
+            {
+                if (floor == 3)
+                    controller.CallElevatorDown(2); // Act
+                else
+                    tcs.SetResult();
+            };
+
+            controller.CallElevatorUp(3);
+
+            // Act
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(2, _elevator.CurrentFloor);
+        }
+
+        
     }
 }

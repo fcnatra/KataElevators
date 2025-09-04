@@ -27,13 +27,17 @@ namespace Elevators
             ForceElevatorToTakeTheCallIfItsInthePath(floor);
         }
 
+        public void CallElevatorDown(int floor)
+        {
+            Debug.WriteLine($"Called DOWN from floor {floor} with status {_elevator.Status}");
+            AddFloorToQueue(floor);
+            ForceElevatorToTakeTheCallIfItsInthePath(floor);
+        }
+
         private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
         {
             if (_elevator.IsMoving)
-            {
-                Debug.WriteLine($"Forcing to take the call from floor {floor} if it's in the path");
                 _elevator.GoToFloor(floor);
-            }
         }
 
         public void SelectDestinationFloor(int floor)
