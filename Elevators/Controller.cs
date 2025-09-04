@@ -4,6 +4,7 @@ namespace Elevators
 {
     public class Controller
     {
+        private ExternalCall? _lastExternalCallSent = null;
         private readonly IElevator _elevator;
         private readonly HashSet<ExternalCall> _pendingExternalCalls = new();
         private readonly HashSet<int> _pendingInternalSelections = new();
@@ -22,7 +23,7 @@ namespace Elevators
         {
             Debug.WriteLine($"Called {direction} from floor {floor} with status {{_elevator.Status}});");
             AddExternalCall(floor, direction);
-            ForceElevatorToTakeTheCallIfItsInthePath(floor);
+            ForceElevatorToTakeTheCallIfItsInthePath(floor, direction);
         }
 
         public void SelectDestinationFloor(int floor)
@@ -55,23 +56,23 @@ namespace Elevators
             }
         }
 
-        private void RemoveFloorFromQueues(int floor)
-        {
-            var toRemove = _pendingExternalCalls.Where(c => c.Floor == floor).ToList();
-            foreach (var call in toRemove)
-                _pendingExternalCalls.Remove(call);
-            if (_pendingInternalSelections.Contains(floor))
-                _pendingInternalSelections.Remove(floor);
-        }
-
         private List<int> GetInternalAndExternalCalls() => _pendingInternalSelections.Concat(_pendingExternalCalls.Select(c => c.Floor)).ToList();
 
-        private bool NoPendingMovementsFunc() => _pendingExternalCalls.Count == 0 && _pendingInternalSelections.Count == 0;
-
-        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor)
+        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor, Direction direction)
         {
-            if (_elevator.IsMoving)
+            if (MovingInSameDirection(direction))
+            {
+                _lastExternalCallSent = _pendingExternalCalls
+                    .First(c => c.Floor == floor && c.Direction == direction);
+
                 _elevator.GoToFloor(floor);
+            }
+        }
+
+        private bool MovingInSameDirection(Direction direction)
+        {
+            return _elevator.IsMovingUp && direction == Direction.Up
+                || _elevator.IsMovingDown && direction == Direction.Down;
         }
 
         private void CaptureElevatorEvents()
@@ -96,6 +97,9 @@ namespace Elevators
 
                 if (!_elevator.IsStoppedAt(nextFloor))
                     CloseDoors();
+
+                _lastExternalCallSent = _pendingExternalCalls.FirstOrDefault(x => x.Floor == nextFloor);
+
                 _elevator.GoToFloor(nextFloor);
             }
         }
@@ -149,6 +153,17 @@ namespace Elevators
 
             if (ElevatorIsIdle)
                 OnElevatorIdle?.Invoke();
+        }
+
+        private void RemoveFloorFromQueues(int floor)
+        {
+            var toRemove = _pendingExternalCalls.Where(c => c.Floor == floor).ToList();
+
+            foreach (var call in toRemove)
+                _pendingExternalCalls.Remove(call);
+
+            if (_pendingInternalSelections.Contains(floor))
+                _pendingInternalSelections.Remove(floor);
         }
     }
 }
