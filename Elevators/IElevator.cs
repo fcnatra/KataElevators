@@ -26,4 +26,5 @@ public interface IElevator
     void GoToFloor(int targetFloor);
     void OpenDoors();
     void CloseDoors();
+    bool IsStoppedAt(int floor);
 }

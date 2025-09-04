@@ -62,23 +62,29 @@ namespace Elevators
             {
                 await Task.Delay(100);
 
-                if (_elevator.Status != ElevatorStatus.Stopped || NoPendingMovements)
+                if (_elevator.IsMoving || NoPendingMovements)
                     continue;
-
+                
                 int nextFloor = GetNextFloor();
-
-                _elevator.CloseDoors();
+                
+                if (!_elevator.IsStoppedAt(nextFloor))
+                    CloseDoors();
                 _elevator.GoToFloor(nextFloor);
             }
         }
 
+        private void CloseDoors()
+        {
+            if (_elevator.DoorStatus == DoorStatus.Open) _elevator.CloseDoors();
+        }
+        
         private int GetNextFloor()
         {
             if (MovingUpAndRequestAbove())
                 return _pendingRequests.Where(f => f > _elevator.CurrentFloor).Min();
 
             if (MovingDownAndRequestBelow() || MovingUpButNoMoreMovementsAbove())
-                    return _pendingRequests.Where(f => f < _elevator.CurrentFloor).Max();
+                return _pendingRequests.Where(f => f < _elevator.CurrentFloor).Max();
 
             return _pendingRequests.First();
         }

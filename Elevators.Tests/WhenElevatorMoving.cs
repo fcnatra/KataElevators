@@ -39,10 +39,20 @@ public class WhenElevatorMoving
         var tcs = new TaskCompletionSource();
 
         int stopCount = 0;
-        _elevator.OnAfterStop += _ => { stopCount++; if (stopCount == 3) tcs.SetResult(); };
+        _elevator.OnFloor += floor => Debug.WriteLine($"Current floor: {floor}");
+        _elevator.OnAfterStop += floor =>
+        {
+            Debug.WriteLine($"Stopped at {floor}");
+            stopCount++;
+            tcs.SetResult();
+        };
 
         _elevator.GoToFloor(8);
+        await tcs.Task; tcs = new TaskCompletionSource();
+
+        _elevator.CloseDoors();
         _elevator.GoToFloor(5);
+        await tcs.Task; tcs = new TaskCompletionSource();
 
         // Act
         _elevator.GoToFloor(15); // Try to go above top floor
@@ -55,19 +65,19 @@ public class WhenElevatorMoving
     [Fact]
     public async Task ElevatorDoesNotGoBelowLowerFloor()
     {
-    // Arrange
-    bool beforeMovingCalled = false;
-    _elevator.OnBeforeMoving += () => beforeMovingCalled = true;
+        // Arrange
+        bool beforeMovingCalled = false;
+        _elevator.OnBeforeMoving += () => beforeMovingCalled = true;
 
-    // Act
-    _elevator.GoToFloor(-4);
+        // Act
+        _elevator.GoToFloor(-4);
 
-    // Wait at least the time it would take to move one floor
-    await Task.Delay(_elevator.SecondsPerFloor * 1000);
+        // Wait at least the time it would take to move one floor
+        await Task.Delay(_elevator.SecondsPerFloor * 1000);
 
-    // Assert
-    Assert.False(beforeMovingCalled); // Should not have moved
-    Assert.Equal(_lowerFloor, _elevator.CurrentFloor);
+        // Assert
+        Assert.False(beforeMovingCalled); // Should not have moved
+        Assert.Equal(_lowerFloor, _elevator.CurrentFloor);
     }
 
     [Theory]

@@ -12,6 +12,7 @@ namespace Elevators
         public bool IsMovingUp => Status == ElevatorStatus.MovingUp;
         public bool IsMovingDown => Status == ElevatorStatus.MovingDown;
         public bool IsMoving => IsMovingUp || IsMovingDown || Status == ElevatorStatus.ProcessingMovement;
+        public bool IsStoppedAt(int floor) => Status == ElevatorStatus.Stopped && CurrentFloor == floor;
 
         public ElevatorStatus LastMovementDirection { get; private set; } = ElevatorStatus.Stopped;
 
@@ -80,11 +81,14 @@ namespace Elevators
 
             _currentTargetFloor = targetFloor;
 
-            if (targetFloor != CurrentFloor)
+            if (targetFloor == CurrentFloor)
+            {
+                StopElevator();
+            }
+            else
             {
                 System.Threading.Tasks.Task.Run(() => MoveToFloor());
             }
-            else OnAfterStop?.Invoke(CurrentFloor);// If destinationFloor == CurrentFloor, do nothing
         }
 
         public void OpenDoors()
@@ -144,12 +148,17 @@ namespace Elevators
             int floor = start;
             while (floor != end)
             {
-                System.Threading.Thread.Sleep(SecondsPerFloor * 1000); // Simulate time taken to move between floors
+                System.Threading.Thread.Sleep(SecondsPerFloor * 200); // Simulate time taken to move between floors
                 floor += step;
                 SetCurrentFloor(floor);
                 end = CheckIfTargetHasChanged(end);
             }
             LastMovementDirection = Status;
+            StopElevator();
+        }
+
+        private void StopElevator()
+        {
             Status = ElevatorStatus.Stopped;
             OnAfterStop?.Invoke(CurrentFloor);
         }
