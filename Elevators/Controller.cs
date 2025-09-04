@@ -18,7 +18,7 @@ namespace Elevators
             Task.Run(async () => await StartRequestProcessingLoop());
         }
 
-        public void CallElevator(int floor, CallDirection direction)
+        public void CallElevator(int floor, Direction direction)
         {
             Debug.WriteLine($"Called {direction} from floor {floor} with status {{_elevator.Status}});");
             AddExternalCall(floor, direction);
@@ -36,7 +36,7 @@ namespace Elevators
             return _pendingExternalCalls.Any(c => c.Floor == floor) || _pendingInternalSelections.Contains(floor);
         }
 
-        private void AddExternalCall(int floor, CallDirection direction)
+        private void AddExternalCall(int floor, Direction direction)
         {
             var call = new ExternalCall(floor, direction);
             if (!_pendingExternalCalls.Contains(call))

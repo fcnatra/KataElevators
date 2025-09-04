@@ -22,7 +22,7 @@ namespace Elevators.Tests
             var controller = new Controller(_elevator);
 
             // Act
-            controller.CallElevator(3, CallDirection.Up);
+            controller.CallElevator(3, Direction.Up);
             await tcs.Task;
 
             // Assert
@@ -52,8 +52,8 @@ namespace Elevators.Tests
             };
             controller.OnElevatorIdle += () => tcs.SetResult();
 
-            if (direction == 1) controller.CallElevator(call, CallDirection.Up);
-            else controller.CallElevator(call, CallDirection.Down);
+            if (direction == 1) controller.CallElevator(call, Direction.Up);
+            else controller.CallElevator(call, Direction.Down);
 
             // Act
             await tcs.Task;
@@ -88,10 +88,10 @@ namespace Elevators.Tests
 
             controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
 
-            controller.CallElevator(firstCall, CallDirection.Up);
+            controller.CallElevator(firstCall, Direction.Up);
 
             // Act
-            controller.CallElevator(secondCall, CallDirection.Up);
+            controller.CallElevator(secondCall, Direction.Up);
             await tcs.Task;
 
             // Assert
@@ -123,11 +123,11 @@ namespace Elevators.Tests
                     controller.SelectDestinationFloor(9);
                 }
             };
-            controller.CallElevator(5, CallDirection.Up);
+            controller.CallElevator(5, Direction.Up);
             await tcs.Task;
 
             // Act
-            controller.CallElevator(4, CallDirection.Up);
+            controller.CallElevator(4, Direction.Up);
             await tcs.Task;
 
             // Assert
@@ -149,7 +149,7 @@ namespace Elevators.Tests
             controller.OnElevatorIdle += () => tcs.SetResult();
 
             // Act
-            controller.CallElevator(5, CallDirection.Up);
+            controller.CallElevator(5, Direction.Up);
 
             // Assert
             await tcs.Task;
@@ -165,12 +165,12 @@ namespace Elevators.Tests
             _elevator.OnAfterStop += (floor) =>
             {
                 if (floor == 3)
-                    controller.CallElevator(2, CallDirection.Down); // Act
+                    controller.CallElevator(2, Direction.Down); // Act
                 else
                     tcs.SetResult();
             };
 
-            controller.CallElevator(3, CallDirection.Up);
+            controller.CallElevator(3, Direction.Up);
 
             // Act
             await tcs.Task;

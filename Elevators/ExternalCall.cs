@@ -3,8 +3,8 @@ namespace Elevators;
 public struct ExternalCall
 {
 	public int Floor { get; }
-	public CallDirection Direction { get; }
-	public ExternalCall(int floor, CallDirection direction)
+	public Direction Direction { get; }
+	public ExternalCall(int floor, Direction direction)
 	{
 		Floor = floor;
 		Direction = direction;
