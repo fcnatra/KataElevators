@@ -16,7 +16,7 @@ namespace Elevators
         {
             _elevator = elevator;
             CaptureElevatorEvents();
-            Task.Run(async () => await ProcessRequestsInALoop());
+            Task.Run(async () => await ProcessRequestsInLoop());
         }
 
         public void CallElevator(int floor, Direction direction)
