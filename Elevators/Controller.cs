@@ -110,6 +110,8 @@ namespace Elevators
 
         private int GetNextFloor()
         {
+            if (_elevator.IsMoving) throw new InvalidOperationException("Elevator is moving. Can't request for a new floor to move.");
+            
             var allRequests = GetInternalAndExternalCalls();
             if (allRequests.Count == 0)
                 throw new InvalidOperationException("No pending requests.");
