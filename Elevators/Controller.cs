@@ -4,7 +4,7 @@ namespace Elevators
 {
     public class Controller
     {
-        private ExternalCall? _lastExternalCallSent = null;
+        private ExternalCall? _lastExternalCallAttended = null;
         private readonly IElevator _elevator;
         private readonly HashSet<ExternalCall> _pendingExternalCalls = new();
         private readonly HashSet<int> _pendingInternalSelections = new();
@@ -16,7 +16,7 @@ namespace Elevators
         {
             _elevator = elevator;
             CaptureElevatorEvents();
-            Task.Run(async () => await StartRequestProcessingLoop());
+            Task.Run(async () => await ProcessRequestsInALoop());
         }
 
         public void CallElevator(int floor, Direction direction)
@@ -57,13 +57,11 @@ namespace Elevators
             }
         }
 
-        private List<int> GetInternalAndExternalCalls() => _pendingInternalSelections.Concat(_pendingExternalCalls.Select(c => c.Floor)).ToList();
-
         private void ForceElevatorToTakeTheCallIfItsInthePath(ExternalCall call)
         {
             if (MovingInSameDirection(call.Direction))
             {
-                _lastExternalCallSent = _pendingExternalCalls
+                _lastExternalCallAttended = _pendingExternalCalls
                     .First(c => c.Floor == call.Floor && c.Direction == call.Direction);
 
                 _elevator.GoToFloor(call.Floor);
@@ -85,7 +83,7 @@ namespace Elevators
             _elevator.OnBeforeMoving += () => Debug.WriteLine($"Elevator is about to move: {_elevator.Status}");
         }
 
-        private async Task StartRequestProcessingLoop()
+        private async Task ProcessRequestsInLoop()
         {
             while (true)
             {
@@ -99,7 +97,7 @@ namespace Elevators
                 if (!_elevator.IsStoppedAt(nextFloor))
                     CloseDoors();
 
-                _lastExternalCallSent = _pendingExternalCalls.FirstOrDefault(x => x.Floor == nextFloor);
+                _lastExternalCallAttended = _pendingExternalCalls.FirstOrDefault(x => x.Floor == nextFloor);
 
                 _elevator.GoToFloor(nextFloor);
             }
@@ -123,6 +121,11 @@ namespace Elevators
                 return allRequests.Where(f => f < _elevator.CurrentFloor).Max();
 
             return allRequests.OrderBy(f => Math.Abs(f - _elevator.CurrentFloor)).First();
+        }
+
+        private List<int> GetInternalAndExternalCalls()
+        {
+            return _pendingInternalSelections.Concat(_pendingExternalCalls.Select(c => c.Floor)).ToList();
         }
 
         private bool MovingUpButNoMoreMovementsAbove()
