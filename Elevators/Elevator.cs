@@ -7,7 +7,17 @@ namespace Elevators
 
     public class Elevator : IElevator
     {
-        public ElevatorStatus Status { get; private set; } = ElevatorStatus.Stopped;
+        public string Id { get; set; } = "Elevator";
+        private ElevatorStatus _status = ElevatorStatus.Stopped;
+        public ElevatorStatus Status
+        {
+            get => _status;
+            private set
+            {
+                _status = value;
+                OnStatusChanged?.Invoke();
+            }
+        }
         public DoorStatus DoorStatus { get; private set; } = DoorStatus.Open;
         public bool IsMovingUp => Status == ElevatorStatus.MovingUp;
         public bool IsMovingDown => Status == ElevatorStatus.MovingDown;
@@ -16,6 +26,7 @@ namespace Elevators
 
         public ElevatorStatus LastMovementDirection { get; private set; } = ElevatorStatus.Stopped;
 
+        public Action? OnStatusChanged { get; set; }
         public Action<int>? OnFloor { get; set; }
         public Action? OnBeforeMoving { get; set; }
         public Action<int>? OnAfterStop { get; set; }
@@ -93,8 +104,10 @@ namespace Elevators
 
         public void OpenDoors()
         {
-            OnDoorsOpened?.Invoke();
+            if (DoorStatus == DoorStatus.Open) return;
+
             DoorStatus = DoorStatus.Open;
+            OnDoorsOpened?.Invoke();
         }
 
         public void CloseDoors()

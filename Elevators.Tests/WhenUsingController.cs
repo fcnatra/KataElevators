@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FakeItEasy;
 
 namespace Elevators.Tests
@@ -32,9 +33,7 @@ namespace Elevators.Tests
 
             // Assert
             await tcs.Task;
-            Assert.Contains(1, attendedFloors);
-            Assert.Contains(3, attendedFloors);
-            Assert.Contains(6, attendedFloors);
+            Assert.Equal(new[] { 1, 3, 6 }, attendedFloors);
         }
 
         [Fact]
@@ -98,9 +97,13 @@ namespace Elevators.Tests
         {
             // Arrange
             var tcs = new TaskCompletionSource();
-            _elevator.OnDoorsOpened += () => tcs.SetResult();
+            _elevator.OnBeforeMoving += () => tcs.SetResult();
 
             var controller = new Controller(_elevator);
+            controller.OnElevatorIdle += () => {
+                Debug.WriteLine($"Elevator is idle at floor {_elevator.CurrentFloor}");
+                tcs.SetResult();
+            };
 
             controller.SelectDestinationFloor(firstMovement);
             await tcs.Task;
@@ -108,6 +111,8 @@ namespace Elevators.Tests
 
             // Act
             controller.SelectDestinationFloor(destinationFloor);
+            await tcs.Task;
+            tcs = new TaskCompletionSource();
 
             // Assert
             await tcs.Task;

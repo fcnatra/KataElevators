@@ -2,6 +2,7 @@ namespace Elevators;
 
 public interface IElevator
 {
+    string Id { get; set; }
     ElevatorStatus Status { get; }
     DoorStatus DoorStatus { get; }
     ElevatorStatus LastMovementDirection { get; }
@@ -16,6 +17,7 @@ public interface IElevator
     int CurrentFloor { get; }
     int LowerFloor { get; }
 
+    Action? OnStatusChanged { get; set; }
     Action<int>? OnFloor { get; set; }
     Action? OnBeforeMoving { get; set; }
     Action<int>? OnAfterStop { get; set; }
