@@ -22,8 +22,8 @@ namespace Elevators
         public void CallElevator(int floor, Direction direction)
         {
             Debug.WriteLine($"Called {direction} from floor {floor} with status {{_elevator.Status}});");
-            AddExternalCall(floor, direction);
-            ForceElevatorToTakeTheCallIfItsInthePath(floor, direction);
+            ExternalCall call = AddExternalCall(floor, direction);
+            ForceElevatorToTakeTheCallIfItsInthePath(call);
         }
 
         public void SelectDestinationFloor(int floor)
@@ -37,7 +37,7 @@ namespace Elevators
             return _pendingExternalCalls.Any(c => c.Floor == floor) || _pendingInternalSelections.Contains(floor);
         }
 
-        private void AddExternalCall(int floor, Direction direction)
+        private ExternalCall AddExternalCall(int floor, Direction direction)
         {
             var call = new ExternalCall(floor, direction);
             if (!_pendingExternalCalls.Contains(call))
@@ -45,6 +45,7 @@ namespace Elevators
                 Debug.WriteLine($"Added external call for floor {floor} direction {direction}");
                 _pendingExternalCalls.Add(call);
             }
+            return call;
         }
 
         private void AddInternalSelection(int floor)
@@ -58,14 +59,14 @@ namespace Elevators
 
         private List<int> GetInternalAndExternalCalls() => _pendingInternalSelections.Concat(_pendingExternalCalls.Select(c => c.Floor)).ToList();
 
-        private void ForceElevatorToTakeTheCallIfItsInthePath(int floor, Direction direction)
+        private void ForceElevatorToTakeTheCallIfItsInthePath(ExternalCall call)
         {
-            if (MovingInSameDirection(direction))
+            if (MovingInSameDirection(call.Direction))
             {
                 _lastExternalCallSent = _pendingExternalCalls
-                    .First(c => c.Floor == floor && c.Direction == direction);
+                    .First(c => c.Floor == call.Floor && c.Direction == call.Direction);
 
-                _elevator.GoToFloor(floor);
+                _elevator.GoToFloor(call.Floor);
             }
         }
 
@@ -111,7 +112,6 @@ namespace Elevators
 
         private int GetNextFloor()
         {
-            // TO DO: If the elevator is moving, inner selections have priority over external calls.
             var allRequests = GetInternalAndExternalCalls();
             if (allRequests.Count == 0)
                 throw new InvalidOperationException("No pending requests.");

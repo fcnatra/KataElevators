@@ -30,9 +30,11 @@ namespace Elevators.Tests
         }
 
         [Theory]
-        [InlineData(3, 1, new[] { 5, 2 }, new[] { 3, 5, 2 })]
-        [InlineData(3, 0, new[] { 5, 2 }, new[] { 3, 2, 5 })]
-        public async Task OnADirection_FirstHandleCallsToThatDirection(int call, int direction, int[] selections, int[] expected)
+        [InlineData(3, Direction.Up, new[] { 2, 5 }, new[] { 3, 5, 2 })]
+        [InlineData(3, Direction.Up, new[] { 5, 2 }, new[] { 3, 5, 2 })]
+        [InlineData(3, Direction.Down, new[] { 2, 5 }, new[] { 3, 2, 5 })]
+        [InlineData(3, Direction.Down, new[] { 5, 2 }, new[] { 3, 2, 5 })]
+        public async Task FirstHandleCallsToThatDirection(int call, Direction direction, int[] selections, int[] expected)
         {
             // Arrange
             var controller = new Controller(_elevator);
@@ -52,14 +54,13 @@ namespace Elevators.Tests
             };
             controller.OnElevatorIdle += () => tcs.SetResult();
 
-            if (direction == 1) controller.CallElevator(call, Direction.Up);
-            else controller.CallElevator(call, Direction.Down);
+            controller.CallElevator(call, direction);
 
             // Act
             await tcs.Task;
 
             // Assert
-            Assert.Equal(selections.Last(), _elevator.CurrentFloor);
+            Assert.Equal(expected.Last(), _elevator.CurrentFloor);
             Assert.Equal(expected, attendedFloors);
         }
 
