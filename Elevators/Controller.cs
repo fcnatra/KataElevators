@@ -21,7 +21,7 @@ namespace Elevators
 
         public void CallElevator(int floor, Direction direction)
         {
-            Debug.WriteLine($"Called {direction} from floor {floor} with status {{_elevator.Status}});");
+            Debug.WriteLine($"Called {direction} from floor {floor} with status {_elevator.Status}");
             ExternalCall call = AddExternalCall(floor, direction);
             ForceElevatorToTakeTheCallIfItsInthePath(call);
         }
