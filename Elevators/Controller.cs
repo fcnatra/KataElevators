@@ -133,17 +133,12 @@ namespace Elevators
                 nextFloor = _lastExternalCallAttended.Direction == Direction.Up
                     ? GetNextFloorUpAboveCurrentFloor()
                     : GetNextFloorDownBelowCurrentFloor();
-                if (nextFloor is not null) return nextFloor.Value;
             }
 
-            if (_elevator.LastMovementDirection == ElevatorStatus.MovingUp || _elevator.LastMovementDirection == ElevatorStatus.Stopped)
-            {
-                nextFloor = GetNextFloorUpAboveCurrentFloor();
-                if (nextFloor is not null) return nextFloor.Value;
-            }
+            nextFloor ??= GetNextFloorUpAboveCurrentFloor();
 
             // let's process downward movements
-            nextFloor = GetNextFloorDownBelowCurrentFloor();
+            nextFloor ??= GetNextFloorDownBelowCurrentFloor();
 
             // let's process any pending external movement
             nextFloor ??= GetNearestInternalCall();
@@ -166,7 +161,10 @@ namespace Elevators
 
         private int? GetNextFloorUpAboveCurrentFloor()
         {
-            int? nextFloor;
+            if (_elevator.LastMovementDirection != ElevatorStatus.MovingUp && _elevator.LastMovementDirection != ElevatorStatus.Stopped)
+                return null;
+
+            int? nextFloor = null;
             int? closestInternalRequestUp = GetClosestInternalRequestUp_AboveCurrentFloor();
             ExternalCall? closestExternalRequestUp = GetClosestExternalRequestUp_AboveCurrentFloor();
 
