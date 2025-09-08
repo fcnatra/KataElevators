@@ -122,11 +122,7 @@ namespace Elevators
         {
             int? nextFloor = null;
 
-            if (_elevator.IsMoving)
-                throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when is moving");
-
-            if (NoPendingMovements)
-                throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when there are no pending movements.");
+            HandleExceptionsOnGettingNextFloor();
 
             if (_lastExternalCallAttended is not null)
             {
@@ -148,6 +144,15 @@ namespace Elevators
                 throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when there are no pending movements.");
 
             return nextFloor.Value;
+        }
+
+        private void HandleExceptionsOnGettingNextFloor()
+        {
+            if (_elevator.IsMoving)
+                throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when is moving");
+
+            if (NoPendingMovements)
+                throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when there are no pending movements.");
         }
 
         private int? GetNextFloorDownBelowCurrentFloor()
