@@ -120,56 +120,97 @@ namespace Elevators
 
         private int GetNextFloor()
         {
+            int? nextFloor = null;
+
             if (_elevator.IsMoving)
                 throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when is moving");
 
             if (NoPendingMovements)
-                throw new InvalidOperationException($"{_elevator.Id}'t request for a new floor when there are no pending movements.");
+                throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when there are no pending movements.");
+
+            if (_lastExternalCallAttended is not null)
+            {
+                nextFloor = _lastExternalCallAttended.Direction == Direction.Up
+                    ? GetNextFloorUpAboveCurrentFloor()
+                    : GetNextFloorDownBelowCurrentFloor();
+                if (nextFloor is not null) return nextFloor.Value;
+            }
 
             if (_elevator.LastMovementDirection == ElevatorStatus.MovingUp || _elevator.LastMovementDirection == ElevatorStatus.Stopped)
             {
-                int? closestInternalRequestUp = GetClosestInternalRequestUp();
-                ExternalCall? closestExternalRequestUp = GetClosestExternalRequestUp();
-
-                int? closestFloorUp = GetClosestFloor(closestInternalRequestUp, closestExternalRequestUp, Direction.Up);
-
-                if (closestFloorUp is not null)
-                    return closestFloorUp.Value;
+                nextFloor = GetNextFloorUpAboveCurrentFloor();
+                if (nextFloor is not null) return nextFloor.Value;
             }
 
             // let's process downward movements
-            int? closestInternalRequestDown = GetClosestInternalRequestDown();
-            ExternalCall? closestExternalRequestDown = GetClosestExternalRequestDown();
+            nextFloor = GetNextFloorDownBelowCurrentFloor();
 
-            int? closestFloorDown = GetClosestFloor(closestInternalRequestDown, closestExternalRequestDown, Direction.Down);
+            // let's process any pending external movement
+            nextFloor ??= GetNearestInternalCall();
+            nextFloor ??= GetNearestExternalCall()?.Floor;
 
-            if (closestFloorDown is null)
+            if (nextFloor is null)
                 throw new InvalidOperationException($"{_elevator.Id} Can't request for a new floor when there are no pending movements.");
 
-            return closestFloorDown.Value;
+            return nextFloor.Value;
         }
 
-        private int? GetClosestFloor(int? closestInternalRequestUp, ExternalCall? closestExternalRequestUp, Direction direction)
+        private int? GetNextFloorDownBelowCurrentFloor()
         {
-            int? closestFloorUp = closestInternalRequestUp;
+            int? nextFloor;
+            int? closestInternalRequestDown = GetClosestInternalRequestDown_BelowCurrentFloor();
+            ExternalCall? closestExternalRequestDown = GetClosestExternalRequestDown_BelowCurrentFloor();
+            nextFloor = GetClosestFloor(closestInternalRequestDown, closestExternalRequestDown, Direction.Down);
+            return nextFloor;
+        }
 
-            if (closestExternalRequestUp is not null)
+        private int? GetNextFloorUpAboveCurrentFloor()
+        {
+            int? nextFloor;
+            int? closestInternalRequestUp = GetClosestInternalRequestUp_AboveCurrentFloor();
+            ExternalCall? closestExternalRequestUp = GetClosestExternalRequestUp_AboveCurrentFloor();
+
+            nextFloor = GetClosestFloor(closestInternalRequestUp, closestExternalRequestUp, Direction.Up);
+            return nextFloor;
+        }
+
+        private int? GetNearestInternalCall()
+        {
+            return _pendingInternalSelections.Any()
+                ? _pendingInternalSelections
+                    .OrderBy(f => Math.Abs(f - _elevator.CurrentFloor))
+                    .FirstOrDefault()
+                : null;
+        }
+
+        private ExternalCall? GetNearestExternalCall()
+        {
+            return _pendingExternalCalls
+                .OrderBy(c => Math.Abs(c.Floor - _elevator.CurrentFloor))
+                .FirstOrDefault();
+        }
+
+        private int? GetClosestFloor(int? internalRequest, ExternalCall? externalRequest, Direction direction)
+        {
+            int? closestFloor = internalRequest;
+
+            if (externalRequest is not null)
             {
-                closestFloorUp ??= closestExternalRequestUp.Floor;
+                closestFloor ??= externalRequest.Floor;
 
                 if (direction is Direction.Up)
-                    closestFloorUp = Math.Min(closestFloorUp.Value, closestExternalRequestUp.Floor);
+                    closestFloor = Math.Min(closestFloor.Value, externalRequest.Floor);
                 else
-                    closestFloorUp = Math.Max(closestFloorUp.Value, closestExternalRequestUp.Floor);
+                    closestFloor = Math.Max(closestFloor.Value, externalRequest.Floor);
 
-                if (closestFloorUp == closestExternalRequestUp.Floor)
-                    _lastExternalCallAttended = closestExternalRequestUp;
+                if (closestFloor == externalRequest.Floor)
+                    _lastExternalCallAttended = externalRequest;
             }
 
-            return closestFloorUp;
+            return closestFloor;
         }
 
-        private ExternalCall? GetClosestExternalRequestDown()
+        private ExternalCall? GetClosestExternalRequestDown_BelowCurrentFloor()
         {
             var calls = _pendingExternalCalls
                 .Where(c => c.Floor < _elevator.CurrentFloor && c.Direction == Direction.Down);
@@ -177,7 +218,7 @@ namespace Elevators
             return calls.Any() ? calls.Min() : null;
         }
 
-        private int? GetClosestInternalRequestDown()
+        private int? GetClosestInternalRequestDown_BelowCurrentFloor()
         {
             var selections = _pendingInternalSelections
                 .Where(f => f < _elevator.CurrentFloor);
@@ -185,15 +226,15 @@ namespace Elevators
             return selections.Any() ? selections.Min() : null;
         }
 
-        private ExternalCall? GetClosestExternalRequestUp()
+        private ExternalCall? GetClosestExternalRequestUp_AboveCurrentFloor()
         {
             var calls = _pendingExternalCalls
                 .Where(c => c.Floor > _elevator.CurrentFloor && c.Direction == Direction.Up);
 
-            return calls.Min();// calls.Any() ? calls.Min() : null;
+            return calls.Any() ? calls.Min() : null;
         }
 
-        private int? GetClosestInternalRequestUp()
+        private int? GetClosestInternalRequestUp_AboveCurrentFloor()
         {
             var selections = _pendingInternalSelections
                 .Where(f => f >= _elevator.CurrentFloor);

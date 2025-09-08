@@ -40,12 +40,10 @@ namespace Elevators.Tests
             var controller = new Controller(_elevator);
 
             var attendedFloors = new HashSet<int>();
-            var stops = 0;
             var tcs = new TaskCompletionSource();
             _elevator.OnDoorsOpened += () =>
             {
                 attendedFloors.Add(_elevator.CurrentFloor);
-                stops++;
                 if (_elevator.IsStoppedAt(call))
                 {
                     controller.SelectDestinationFloor(selections[0]);
