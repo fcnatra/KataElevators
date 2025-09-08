@@ -20,18 +20,14 @@ namespace Elevators.Tests
             var floorsToVisit = new[] { 2, 4, 6, 8, 10 };
             var tcs = new TaskCompletionSource();
 
-            _elevator.OnDoorsOpened += () =>
-            {
-                if (_elevator.IsStoppedAt(0))
-                {
-                    foreach (var floor in floorsToVisit)
-                        controller.SelectDestinationFloor(floor);
-                }
-            };
-
             _elevator.OnAfterStop += floor =>
             {
                 attendedFloors.Add(floor);
+                if (_elevator.IsStoppedAt(0))
+                {
+                    foreach (var f in floorsToVisit)
+                        controller.SelectDestinationFloor(f);
+                }
                 if (attendedFloors.Count == floorsToVisit.Length)
                     tcs.TrySetResult();
             };
