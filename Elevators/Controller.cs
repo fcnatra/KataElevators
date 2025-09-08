@@ -155,14 +155,14 @@ namespace Elevators
 
             if (closestExternalRequestUp is not null)
             {
-                closestFloorUp ??= closestExternalRequestUp.Value.Floor;
+                closestFloorUp ??= closestExternalRequestUp.Floor;
 
                 if (direction is Direction.Up)
-                    closestFloorUp = Math.Min(closestFloorUp.Value, closestExternalRequestUp.Value.Floor);
+                    closestFloorUp = Math.Min(closestFloorUp.Value, closestExternalRequestUp.Floor);
                 else
-                    closestFloorUp = Math.Max(closestFloorUp.Value, closestExternalRequestUp.Value.Floor);
+                    closestFloorUp = Math.Max(closestFloorUp.Value, closestExternalRequestUp.Floor);
 
-                if (closestFloorUp == closestExternalRequestUp.Value.Floor)
+                if (closestFloorUp == closestExternalRequestUp.Floor)
                     _lastExternalCallAttended = closestExternalRequestUp;
             }
 
@@ -190,7 +190,7 @@ namespace Elevators
             var calls = _pendingExternalCalls
                 .Where(c => c.Floor > _elevator.CurrentFloor && c.Direction == Direction.Up);
 
-            return calls.Any() ? calls.Min() : null;
+            return calls.Min();// calls.Any() ? calls.Min() : null;
         }
 
         private int? GetClosestInternalRequestUp()
@@ -203,6 +203,7 @@ namespace Elevators
 
         private void RunAfterStopActions(int floor)
         {
+            Console.WriteLine($"{_elevator.Id} stopped at floor {floor}");
             RemoveFloorFromQueues(floor);
             _elevator.OpenDoors();
 

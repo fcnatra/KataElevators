@@ -75,19 +75,14 @@ namespace Elevators.Tests
             var tcs = new TaskCompletionSource();
 
             var controller = new Controller(_elevator);
-            _elevator.OnDoorsOpened += () =>
-            {
-                if (_elevator.IsStoppedAt(firstCall))
-                    controller.SelectDestinationFloor(destination);
-            };
 
             _elevator.OnAfterStop += (floor) =>
             {
                 attendedFloors.Add(floor);
-                if (floor == 7) tcs.TrySetResult();
+                if (_elevator.IsStoppedAt(firstCall))
+                    controller.SelectDestinationFloor(destination);
+                if (floor == destination) tcs.TrySetResult();
             };
-
-            controller.OnElevatorIdle += () => tcs.TrySetResult(); // safe net
 
             controller.CallElevator(firstCall, Direction.Up);
 

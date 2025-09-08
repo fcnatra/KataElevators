@@ -1,6 +1,6 @@
 namespace Elevators;
 
-public struct ExternalCall
+public class ExternalCall : IComparable<ExternalCall>
 {
 	public int Floor { get; }
 	public Direction Direction { get; }
@@ -8,6 +8,11 @@ public struct ExternalCall
 	{
 		Floor = floor;
 		Direction = direction;
+	}
+	public int CompareTo(ExternalCall? other)
+	{
+		if (other is null) return 1;
+		return Floor.CompareTo(other.Floor);
 	}
 	public override bool Equals(object? obj)
 	{
