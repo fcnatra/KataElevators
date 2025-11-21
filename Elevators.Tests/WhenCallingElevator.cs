@@ -1,0 +1,178 @@
+using System.Diagnostics;
+
+namespace Elevators.Tests
+{
+    public class WhenCallingElevator
+    {
+        private Elevator _elevator;
+
+        public WhenCallingElevator()
+        {
+            _elevator = new Elevator(0, 10);
+            _elevator.SecondsPerFloor = 1;
+        }
+
+        [Fact]
+        public async Task Up_GoesToTheCallingFloor()
+        {
+            // Arrange
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) => tcs.SetResult();
+
+            var controller = new Controller(_elevator);
+
+            // Act
+            controller.CallElevator(3, Direction.Up);
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(3, _elevator.CurrentFloor);
+        }
+
+        [Theory]
+        [InlineData(3, Direction.Up, new[] { 2, 5 }, new[] { 3, 5, 2 })]
+        [InlineData(3, Direction.Up, new[] { 5, 2 }, new[] { 3, 5, 2 })]
+        [InlineData(3, Direction.Down, new[] { 2, 5 }, new[] { 3, 2, 5 })]
+        [InlineData(3, Direction.Down, new[] { 5, 2 }, new[] { 3, 2, 5 })]
+        public async Task FirstHandleCallsToThatDirection(int call, Direction direction, int[] selections, int[] expected)
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+
+            var attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+            _elevator.OnDoorsOpened += () =>
+            {
+                attendedFloors.Add(_elevator.CurrentFloor);
+                if (_elevator.IsStoppedAt(call))
+                {
+                    controller.SelectDestinationFloor(selections[0]);
+                    controller.SelectDestinationFloor(selections[1]);
+                }
+            };
+            controller.OnElevatorIdle += () => tcs.SetResult();
+
+            controller.CallElevator(call, direction);
+
+            // Act
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(expected.Last(), _elevator.CurrentFloor);
+            Assert.Equal(expected, attendedFloors);
+        }
+
+        [Theory]
+        [InlineData(1, 7, 4, new[] { 1, 4, 7 })]
+        [InlineData(5, 7, 4, new[] { 4, 5, 7 })]
+        [InlineData(3, 6, 4, new[] { 3, 4, 6 })]
+        public async Task UpFromDifferentFloors_CapturesAllCalls(int firstCall, int destination, int secondCall, int[] expectedFloors)
+        {
+            // Arrange
+            var attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+
+            var controller = new Controller(_elevator);
+
+            _elevator.OnAfterStop += (floor) =>
+            {
+                attendedFloors.Add(floor);
+                if (_elevator.IsStoppedAt(firstCall))
+                    controller.SelectDestinationFloor(destination);
+                if (floor == destination) tcs.TrySetResult();
+            };
+
+            controller.CallElevator(firstCall, Direction.Up);
+
+            // Act
+            controller.CallElevator(secondCall, Direction.Up);
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(destination, _elevator.CurrentFloor);
+            Assert.Equal(expectedFloors, attendedFloors);
+        }
+
+        [Fact]
+        public async Task UpFrom4th_WhileMovingUpAbove5th_ItReturnsAfterFinishingUpwardMovement()
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+
+            HashSet<int> attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+
+            _elevator.OnAfterStop += (floor) =>
+            {
+                attendedFloors.Add(floor);
+                if (floor == 4) tcs.SetResult();
+            };
+            _elevator.OnDoorsOpened += () =>
+            {
+                if (_elevator.IsStoppedAt(5))
+                {
+                    tcs.SetResult();
+                    tcs = new TaskCompletionSource();
+                    controller.SelectDestinationFloor(8);
+                    controller.SelectDestinationFloor(9);
+                }
+            };
+            controller.CallElevator(5, Direction.Up);
+            await tcs.Task;
+
+            // Act
+            controller.CallElevator(4, Direction.Up);
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(new[] { 5, 8, 9, 4 }, attendedFloors);
+        }
+
+        [Fact]
+        public async Task UpButSelectingDown_GoesDown()
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+            _elevator.OnDoorsOpened += () =>
+            {
+                if (_elevator.IsStoppedAt(5))
+                    controller.SelectDestinationFloor(2);
+            };
+
+            var tcs = new TaskCompletionSource();
+            controller.OnElevatorIdle += () => tcs.SetResult();
+
+            // Act
+            controller.CallElevator(5, Direction.Up);
+
+            // Assert
+            await tcs.Task;
+            Assert.Equal(2, _elevator.CurrentFloor);
+        }
+
+        [Fact]
+        public async Task Down_GoesToTheCallingFloor()
+        {
+            // Arrange
+            var controller = new Controller(_elevator);
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) =>
+            {
+                if (floor == 3)
+                    controller.CallElevator(2, Direction.Down); // Act
+                else
+                    tcs.SetResult();
+            };
+
+            controller.CallElevator(3, Direction.Up);
+
+            // Act
+            await tcs.Task;
+
+            // Assert
+            Assert.Equal(2, _elevator.CurrentFloor);
+        }
+
+        
+    }
+}

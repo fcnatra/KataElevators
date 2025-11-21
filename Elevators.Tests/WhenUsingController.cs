@@ -1,7 +1,5 @@
-using Xunit;
-using Elevators;
+using System.Diagnostics;
 using FakeItEasy;
-using Microsoft.VisualBasic;
 
 namespace Elevators.Tests
 {
@@ -13,6 +11,29 @@ namespace Elevators.Tests
         {
             _elevator = new Elevator(0, 10);
             _elevator.SecondsPerFloor = 1;
+        }
+
+        [Fact]
+        public async Task Controller_AttendsToAllThreeRequests_RegardlessOfOrder()
+        {
+            // Arrange
+            var attendedFloors = new HashSet<int>();
+            var tcs = new TaskCompletionSource();
+            _elevator.OnAfterStop += (floor) =>
+            {
+                attendedFloors.Add(floor);
+                if (attendedFloors.Count == 3) tcs.SetResult();
+            };
+            var controller = new Controller(_elevator);
+
+            // Act
+            controller.SelectDestinationFloor(6); // up
+            controller.SelectDestinationFloor(1); // down (before reaching 6)
+            controller.SelectDestinationFloor(3); // up (before reaching 6)
+
+            // Assert
+            await tcs.Task;
+            Assert.Equal(new[] { 1, 3, 6 }, attendedFloors);
         }
 
         [Fact]
@@ -39,8 +60,8 @@ namespace Elevators.Tests
             var doorsOpened = false;
             var tcs = new TaskCompletionSource();
 
-            _elevator.OnAfterStop += (floor) => { floorReached = floor; tcs.SetResult(); };
-            _elevator.OnDoorsOpened += () => doorsOpened = true;
+            _elevator.OnAfterStop += (floor) => { floorReached = floor; };
+            _elevator.OnDoorsOpened += () => { doorsOpened = true; tcs.SetResult(); };
 
             var controller = new Controller(_elevator);
 
@@ -68,47 +89,35 @@ namespace Elevators.Tests
             // Assert
             Assert.True(controller.HasPendingRequestForFloor(destinationFloor));
         }
-        
-        [Fact]
-        public async Task DownRequestMovesElevatorToTheDesiredFloor()
+
+        [Theory]
+        [InlineData(7, 5)]
+        [InlineData(0, 3)]
+        public async Task RequestMovesElevatorToTheDesiredFloor(int firstMovement, int destinationFloor)
         {
             // Arrange
             var tcs = new TaskCompletionSource();
-
-            _elevator.OnDoorsOpened += () => tcs.SetResult();
+            _elevator.OnBeforeMoving += () => tcs.SetResult();
 
             var controller = new Controller(_elevator);
+            controller.OnElevatorIdle += () => {
+                Debug.WriteLine($"Elevator is idle at floor {_elevator.CurrentFloor}");
+                tcs.SetResult();
+            };
 
-            // first, go up
-            controller.SelectDestinationFloor(7);
+            controller.SelectDestinationFloor(firstMovement);
             await tcs.Task;
             tcs = new TaskCompletionSource();
 
             // Act
-            controller.SelectDestinationFloor(5);
+            controller.SelectDestinationFloor(destinationFloor);
+            await tcs.Task;
+            tcs = new TaskCompletionSource();
 
             // Assert
             await tcs.Task;
-            Assert.Equal(5, _elevator.CurrentFloor);
-            Assert.False(controller.HasPendingRequestForFloor(5));
-        }
-
-        [Fact]
-        public async Task UpRequestMovesElevatorToTheDesiredFloor()
-        {
-            // Arrange
-            var tcs = new TaskCompletionSource();
-            _elevator.OnDoorsOpened += () => tcs.SetResult();
-
-            var controller = new Controller(_elevator);
-
-            // Act
-            controller.SelectDestinationFloor(3);
-
-            // Assert
-            await tcs.Task;
-            Assert.Equal(3, _elevator.CurrentFloor);
-            Assert.False(controller.HasPendingRequestForFloor(3));
+            Assert.Equal(destinationFloor, _elevator.CurrentFloor);
+            Assert.False(controller.HasPendingRequestForFloor(destinationFloor));
         }
 
         [Fact]
